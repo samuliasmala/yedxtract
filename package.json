@@ -1,7 +1,7 @@
 {
-  "name": "",
+  "name": "yedxtract",
   "version": "0.0.0",
-  "description": "",
+  "description": "Extract texts from yEd graph editor to Excel and back",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "files": [
