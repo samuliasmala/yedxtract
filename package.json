@@ -2,26 +2,32 @@
   "name": "yedxtract",
   "version": "0.0.0",
   "description": "Extract texts from yEd graph editor to Excel and back",
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "files": [
-    "build/src"
+    "build"
   ],
-  "license": "Apache-2.0",
-  "keywords": [],
+  "license": "MIT",
+  "keywords": [
+    "yed",
+    "extract",
+    "export",
+    "graphml",
+    "excel",
+    "xlsx"
+  ],
   "scripts": {
-    "test": "jest",
-    "lint": "gts lint",
-    "clean": "gts clean",
-    "compile": "tsc",
-    "compile:watch": "tsc --watch --preserveWatchOutput",
-    "prestart": "npm run compile",
+    "prestart": "npm run build",
     "start": "node build/index.js",
-    "dev": "concurrently --kill-others --names app,tsc \"nodemon build/index.js\" \"npm run compile:watch\"",
-    "fix": "gts fix",
-    "prepare": "npm run compile",
-    "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "build": "tsc",
+    "build:watch": "tsc --watch --preserveWatchOutput",
+    "pretest": "npm run build",
+    "test": "jest",
+    "posttest": "npm run lint",
+    "dev": "concurrently --kill-others --names app,tsc \"nodemon build/index.js\" \"npm run build:watch\"",
+    "clean": "gts clean",
+    "lint": "gts lint",
+    "fix": "gts fix"
   },
   "devDependencies": {
     "@types/jest": "^27.5.1",
