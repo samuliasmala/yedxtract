@@ -1,4 +1,4 @@
-import {parse} from './graphml';
+import { parse } from './graphml';
 
 describe('parse()', () => {
   test('no arguments', () => {
