@@ -27,7 +27,8 @@
     "pretest": "npm run build",
     "test": "jest",
     "posttest": "npm run lint",
-    "dev": "concurrently --kill-others --names app,tsc \"nodemon build/index.js\" \"npm run build:watch\"",
+    "dev": "concurrently --kill-others --handle-input --prefix none \"DEBUG=yedxtract* DEBUG_COLORS=1 nodemon build/index.js\" \"npm run build:watch\"",
+    "debug": "concurrently --kill-others --handle-input --prefix none \"DEBUG=yedxtract* DEBUG_COLORS=1 nodemon --inspect-brk build/index.js\" \"npm run build:watch\"",
     "clean": "gts clean",
     "lint": "gts lint",
     "fix": "gts fix"
