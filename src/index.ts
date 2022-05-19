@@ -6,7 +6,12 @@ import { promises as fs } from 'fs';
 import Debug from 'debug';
 const debug = Debug('yedxtract');
 
-import { parseGraphmlFile, getLabels, getFields } from './graphml';
+import {
+  parseGraphmlFile,
+  getLabels,
+  getFields,
+  convertToGraphmlFile,
+} from './graphml';
 import { IExportedFields } from './types';
 
 async function test() {
@@ -20,9 +25,12 @@ async function test() {
       node: { label: ['y:NodeLabel', '[0]', '_'] },
       edge: { label: ['y:EdgeLabel', '[0]', '_'] },
     };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fields = getFields(graph, fieldsToExport);
 
-    const labels2 = getFields(graph, fieldsToExport);
     debug(labels);
+    const xml = convertToGraphmlFile(graph);
+    await fs.writeFile('./data/output.graphml', xml, 'utf-8');
   } catch (err: unknown) {
     if (err instanceof Error) {
       debug('Error: ' + err.message);
