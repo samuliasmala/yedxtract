@@ -22,18 +22,24 @@ export interface IGraphml {
 
 export interface IDataItem {
   id: string;
+  source?: string;
+  target?: string;
   data: IXMLField;
 }
 
 export interface ILabel {
   id: string;
   type: 'node' | 'edge';
+  source?: string;
+  target?: string;
   label: string | null;
 }
 
 export interface IFields {
   id: string;
   type: 'node' | 'edge';
+  source?: string;
+  target?: string;
   fields: Record<string, string | null>;
 }
 

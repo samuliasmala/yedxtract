@@ -60,6 +60,8 @@ export function getLabels(graph: IGraphml): ILabel[] {
   return labels.map(label => ({
     id: label.id,
     type: label.type,
+    ...(label.type === 'edge' ? { source: label.source } : {}),
+    ...(label.type === 'edge' ? { target: label.target } : {}),
     label: label.fields.label,
   }));
 }
@@ -122,6 +124,12 @@ function getGraphDataItem(graph: IGraphml, type: 'node' | 'edge') {
       throw new Error('Proper item data not found');
 
     const result: IDataItem = { id, data: itemData };
+
+    // Add source and target elements for edges
+    if (type === 'edge') {
+      result.source = getNestedString(item, ['$', 'source']);
+      result.target = getNestedString(item, ['$', 'target']);
+    }
     return result;
   });
 }
@@ -153,8 +161,12 @@ function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
 export function extractElements(data: IDataItem[], elements: string[]) {
   debug(`Extracting elements (${elements.join(', ')})`);
 
-  if (elements.includes('id'))
-    throw new Error('id cannot be specified as a field');
+  const FORBIDDEN_ELEMENTS = ['id', 'source', 'target'];
+
+  for (const fe of FORBIDDEN_ELEMENTS) {
+    if (elements.includes(fe))
+      throw new Error(fe + ' cannot be specified as a field');
+  }
 
   return data.map(item => {
     // Get item.data's different child element types, exclude $ which contais
@@ -171,6 +183,9 @@ export function extractElements(data: IDataItem[], elements: string[]) {
 
     // Object to store extracted elements
     const result: IXMLField = { id: item.id };
+    if (item.source !== undefined) result.source = item.source;
+    if (item.target !== undefined) result.target = item.target;
+
     for (const element of elements) {
       result[element] = childElement[element];
     }
@@ -216,7 +231,14 @@ function extractFields(
       }
       result[output] = data;
     }
-    return { id, type, fields: result };
+    const output: IFields = { id, type, fields: result };
+
+    // Add source and target if they exist
+    if (type === 'edge') {
+      output.source = getNestedString(element, ['source']);
+      output.target = getNestedString(element, ['target']);
+    }
+    return output;
   });
 }
 
