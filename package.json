@@ -23,7 +23,7 @@
     "prestart": "npm run build",
     "start": "node build/index.js",
     "build": "tsc",
-    "build:watch": "tsc --watch --preserveWatchOutput",
+    "build:watch": "tsc --watch --preserveWatchOutput --skipLibCheck",
     "pretest": "npm run build",
     "test": "jest",
     "posttest": "npm run lint",
