@@ -2,6 +2,7 @@
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "incremental": true,
+    "sourceMap": true,
     "outDir": "build"
   },
   "include": ["src/**/*.ts"]

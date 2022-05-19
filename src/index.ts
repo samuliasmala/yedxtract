@@ -1,4 +1,6 @@
-console.log('Try npm run lint/fix!');
+// Register TypeScript Source Maps to show correct file name and line number
+// in stack traces
+import 'source-map-support/register';
 
 const longString =
   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ut aliquet diam.';
