@@ -4,6 +4,8 @@ const debug = Debug('yedxtract:graphml');
 
 import type {
   IDataItem,
+  IExportedFields,
+  IFields,
   IGraphml,
   ILabel,
   IXMLField,
@@ -11,7 +13,8 @@ import type {
   TGraphmlKeys,
 } from './types';
 
-/** Parse yEd editor's graphml file (XML) to JS object
+/**
+ * Parse yEd editor's graphml file (XML) to JS object
  *
  * @param graphmlFile - yEd editor's graphml file as a string
  * @returns Parsed graphml file as JS object
@@ -22,24 +25,47 @@ export async function parseGraphmlFile(graphmlFile: string) {
   return graph;
 }
 
-/** Get all node and edge labels from the graph
+/**
+ * Get specified node and edge fields from the graph
+ *
+ * @param graph - graphml file as JS object
+ * @param fields - Fields to export
+ * @returns All node and edge fields from the graph
+ */
+export function getFields(graph: IGraphml, fields: IExportedFields): IFields[] {
+  debug('Getting node and edge labels');
+  const { nodes, edges } = getNodesAndEdges(graph);
+
+  const nodeFields = extractFields(nodes, 'node', fields);
+  const edgeFields = extractFields(edges, 'edge', fields);
+
+  return [...nodeFields, ...edgeFields];
+}
+
+/**
+ * Get all node and edge labels from the graph
  *
  * @param graph - graphml file as JS object
  * @returns All node and edge labels from the graph
  */
 export function getLabels(graph: IGraphml): ILabel[] {
   debug('Getting node and edge labels');
-  const { nodes, edges } = getNodesAndEdges(graph);
-  const nodeLabelFields = extractFields(nodes, ['y:NodeLabel']);
-  const edgeLabelFields = extractFields(edges, ['y:EdgeLabel']);
 
-  const nodeLabels = nodeLabelFields.map(n => extractLabels(n, 'node'));
-  const edgeLabels = edgeLabelFields.map(n => extractLabels(n, 'edge'));
+  const fieldsToExport: IExportedFields = {
+    node: { label: ['y:NodeLabel', '[0]', '_'] },
+    edge: { label: ['y:EdgeLabel', '[0]', '_'] },
+  };
+  const labels = getFields(graph, fieldsToExport);
 
-  return [...nodeLabels, ...edgeLabels];
+  return labels.map(label => ({
+    id: label.id,
+    type: label.type,
+    label: label.fields.label,
+  }));
 }
 
-/** Get node and edge raw data, keep only data element corresponding to the
+/**
+ * Get node and edge raw data, keep only data element corresponding to the
  * nodegraphics/edgegraphics keys
  *
  * @param graph - graphml file as JS object
@@ -52,10 +78,11 @@ function getNodesAndEdges(graph: IGraphml) {
   return { nodes, edges };
 }
 
-/** Get the all items of the type. Only include the data element defined in the
+/**
+ * Get the all items of the type. Only include the data element defined in the
  * graph's Key attributes
  *
- * @param graph
+ * @param graph - graphml file as JS object
  * @param type - Type of the data to get (node or edge)
  * @returns All items with the specified type. Only the data element
  *          corresponding to the specified key is included
@@ -99,24 +126,34 @@ function getGraphDataItem(graph: IGraphml, type: 'node' | 'edge') {
   });
 }
 
-function findKeyId(keys: TGraphmlKeys, keyName: string, keyValue: string) {
-  const key = keys.find(key => key?.$?.[keyName] === keyValue);
+/**
+ * Get the id value of a certain `key` element.
+ *
+ * @param keys - Key elements from the graph
+ * @param keyAttribute - Key attribute to check to find the correct key
+ * @param keyValue - Value of the `keyAttribute` for correct key
+ * @returns The value of the `id` field of the defined key
+ */
+function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
+  const key = keys.find(key => key?.$?.[keyAttribute] === keyValue);
   const id = key?.$?.id;
 
   if (id === undefined) throw new Error(keyValue + ' key missing');
   return id;
 }
 
-/** Extract specified fields from the data items
+/**
+ * Extract specified elements from the data items.
  *
- * @param data - Data where fields are exctracted (i.e. nodes or edges)
- * @param fields - Fields to extract from the data
- * @returns Array of objects with id and specified fields as keys
+ * @param data - Node or edge data extracted from the graph using
+ *               `getGraphDataItem` function
+ * @param elements - Elements to extract from the data
+ * @returns Array of objects with id and specified elements as keys
  */
-export function extractFields(data: IDataItem[], fields: string[]) {
-  debug(`Extracting fields (${fields.join(', ')})`);
+export function extractElements(data: IDataItem[], elements: string[]) {
+  debug(`Extracting elements (${elements.join(', ')})`);
 
-  if (fields.includes('id'))
+  if (elements.includes('id'))
     throw new Error('id cannot be specified as a field');
 
   return data.map(item => {
@@ -132,31 +169,55 @@ export function extractFields(data: IDataItem[], fields: string[]) {
     const childType = childElementTypes[0];
     const childElement = getXMLFieldFromSingletonArray(item.data, childType);
 
-    // Object to store extracted fields
+    // Object to store extracted elements
     const result: IXMLField = { id: item.id };
-    for (const field of fields) {
-      result[field] = childElement[field];
+    for (const element of elements) {
+      result[element] = childElement[element];
     }
 
     return result;
   });
 }
 
-function extractLabels(fields: IXMLField, type: 'node' | 'edge'): ILabel {
-  const FIELD_LABELS = {
-    node: 'y:NodeLabel',
-    edge: 'y:EdgeLabel',
+/**
+ * Extract certain fields from data items.
+ *
+ * @param data - Node or edge data extracted from the graph using
+ *               `getGraphDataItem` function
+ * @param type - node or edge
+ * @param fieldsToExtract - specify the fields which are extracted
+ * @returns Array of objects containing the extracted fields
+ */
+function extractFields(
+  data: IDataItem[],
+  type: 'node' | 'edge',
+  fieldsToExtract: IExportedFields
+): IFields[] {
+  const fields = {
+    ...(fieldsToExtract[type] ?? {}),
+    ...(fieldsToExtract.common ?? {}),
   };
 
-  const id = getNestedString(fields, ['id']);
+  // Get the first element from the `fieldsToExtract` object arrays in order to
+  // extract the final field
+  const elementsToExtract = Object.values(fields).map(f => f[0]);
+  const elements = extractElements(data, elementsToExtract);
 
-  try {
-    const labelData = getXMLFieldFromSingletonArray(fields, FIELD_LABELS[type]);
-    const label = getNestedString(labelData, ['_']);
-    return { id, type, label };
-  } catch (err) {
-    return { id, type, label: null };
-  }
+  return elements.map(element => {
+    const id = getNestedString(element, ['id']);
+    const result: Record<string, string | null> = {};
+
+    for (const output in fields) {
+      let data;
+      try {
+        data = getNestedString(element, fields[output]);
+      } catch (err) {
+        data = null;
+      }
+      result[output] = data;
+    }
+    return { id, type, fields: result };
+  });
 }
 
 function getNestedString(data: IXMLValue, keys: Array<string | number>) {
@@ -188,6 +249,10 @@ function getNestedProperty(data: IXMLValue, keys: Array<string | number>) {
 
     if (Array.isArray(value) && typeof key === 'number') {
       value = value[key];
+    } else if (Array.isArray(value) && key === '[0]') {
+      if (value.length !== 1)
+        throw new Error('Accessing singleton array which is not singleton');
+      value = value[0];
     } else if (!Array.isArray(value) && typeof key === 'string') {
       value = value[key];
     } else {

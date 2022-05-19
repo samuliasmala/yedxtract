@@ -30,3 +30,19 @@ export interface ILabel {
   type: 'node' | 'edge';
   label: string | null;
 }
+
+export interface IFields {
+  id: string;
+  type: 'node' | 'edge';
+  fields: Record<string, string | null>;
+}
+
+export interface IFieldsToExtract {
+  [outputField: string]: string[];
+}
+
+export interface IExportedFields {
+  node?: IFieldsToExtract;
+  edge?: IFieldsToExtract;
+  common?: IFieldsToExtract;
+}
