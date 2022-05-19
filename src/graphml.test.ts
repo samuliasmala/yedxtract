@@ -1,15 +1,25 @@
-import { parse } from './graphml';
+import { promises as fs } from 'fs';
 
-describe('parse()', () => {
-  test('no arguments', () => {
-    expect(parse()).toBe(null);
+import { parseGraphmlFile } from './graphml';
+
+describe('graphml.ts', () => {
+  let graphFile: string;
+
+  beforeAll(async () => {
+    graphFile = await fs.readFile('./data/simple.graphml', 'utf-8');
   });
 
-  test('input string is not a valid graphml file', () => {
-    expect(() => parse('')).toThrow();
-  });
+  describe('parseGraphmlFile()', () => {
+    test('input string is not a valid graphml file', async () => {
+      await expect(parseGraphmlFile('abc')).rejects.toThrow();
+    });
 
-  test('simple.graphml', () => {
-    expect(parse('hello')).toBe('hello');
+    test('simple.graphml', async () => {
+      const graph = await parseGraphmlFile(graphFile);
+
+      expect('graphml' in graph).toBe(true);
+      expect('graph' in graph.graphml).toBe(true);
+      expect('node' in graph.graphml.graph[0]).toBe(true);
+    });
   });
 });

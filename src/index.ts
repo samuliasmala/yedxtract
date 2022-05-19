@@ -2,25 +2,23 @@
 // in stack traces
 import 'source-map-support/register';
 
-const longString =
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ut aliquet diam.';
+import { promises as fs } from 'fs';
+import Debug from 'debug';
+const debug = Debug('yedxtract');
 
-const trailing = 'Semicolon';
+import { parseGraphmlFile, getLabels } from './graphml';
 
-const why = 'am I tabbed?';
-
-export function doSomeStuff(
-  withThis: string,
-  andThat: string,
-  andThose: string[]
-) {
-  //function on one line
-  if (!andThose.length) {
-    return false;
+async function test() {
+  try {
+    const data = await fs.readFile('./data/simple.graphml', 'utf-8');
+    const graph = await parseGraphmlFile(data);
+    const labels = getLabels(graph);
+    debug(labels);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      debug('Error: ' + err.message);
+    }
   }
-  console.log(withThis);
-  console.log(andThat);
-  console.dir(andThose);
-  return;
 }
-// TODO: more examples
+
+test();
