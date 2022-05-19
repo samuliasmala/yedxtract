@@ -1,4 +1,4 @@
-import { parseStringPromise } from 'xml2js';
+import { parseStringPromise, Builder } from 'xml2js';
 import Debug from 'debug';
 const debug = Debug('yedxtract:graphml');
 
@@ -14,7 +14,7 @@ import type {
 } from './types';
 
 /**
- * Parse yEd editor's graphml file (XML) to JS object
+ * Parse yEd editor's graphml (XML) to JS object
  *
  * @param graphmlFile - yEd editor's graphml file as a string
  * @returns Parsed graphml file as JS object
@@ -23,6 +23,21 @@ export async function parseGraphmlFile(graphmlFile: string) {
   debug('Parsing graphml XML string to JS object');
   const graph: IGraphml = await parseStringPromise(graphmlFile);
   return graph;
+}
+
+/**
+ * Convert JS object to yEd editor's graphml (XML)
+ *
+ * @param graph - yEd editor's graphml file as JS object
+ * @returns JS object converted to graphml XML
+ */
+export function convertToGraphmlFile(graph: IGraphml) {
+  debug('Converting JS object to graphml XML string');
+  const builder = new Builder({
+    renderOpts: { pretty: false },
+    xmldec: { version: '1.0', encoding: 'UTF-8', standalone: false },
+  });
+  return builder.buildObject(graph);
 }
 
 /**
