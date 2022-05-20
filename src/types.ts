@@ -62,3 +62,8 @@ export interface IExtractElements {
   edge: string[];
   common: string[];
 }
+
+export interface IXlsxOptions {
+  include?: string[];
+  exclude?: string[];
+}

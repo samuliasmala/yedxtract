@@ -11,7 +11,8 @@ import {
   getUnitsFromGraph,
   convertToGraphmlFormat,
 } from './graphml';
-import { IExtractFields } from './types';
+import { createXlsx } from './excel';
+import type { IExtractFields } from './types';
 
 async function test() {
   try {
@@ -21,9 +22,14 @@ async function test() {
     const fieldsToExport: IExtractFields = {
       node: { configuration: ['$', 'configuration'] },
     };
-    const fields = getUnitsFromGraph(graph, fieldsToExport);
+    const units = getUnitsFromGraph(graph, fieldsToExport);
 
-    debug(fields);
+    //const xlsxFile = createXlsx(units, { include: ['id', 'type', 'label'] });
+    const xlsxFile = createXlsx(units);
+
+    await fs.writeFile('./data/output.xlsx', xlsxFile);
+
+    //debug(units);
 
     const xml = convertToGraphmlFormat(graph);
     await fs.writeFile('./data/output.graphml', xml, 'utf-8');
