@@ -20,7 +20,7 @@ export interface IGraphml {
   };
 }
 
-export interface IDataItem {
+export interface IGraphUnit {
   id: string;
   source?: string;
   target?: string;
@@ -35,7 +35,7 @@ export interface ILabel {
   label: string | null;
 }
 
-export interface IFields {
+export interface IOutputUnit {
   id: string;
   type: 'node' | 'edge';
   source?: string;
@@ -43,12 +43,12 @@ export interface IFields {
   fields: Record<string, string | null>;
 }
 
-export interface IFieldsToExtract {
+export interface IExtractFieldsUnit {
   [outputField: string]: string[];
 }
 
-export interface IExportedFields {
-  node?: IFieldsToExtract;
-  edge?: IFieldsToExtract;
-  common?: IFieldsToExtract;
+export interface IExtractFields {
+  node?: IExtractFieldsUnit;
+  edge?: IExtractFieldsUnit;
+  common?: IExtractFieldsUnit;
 }

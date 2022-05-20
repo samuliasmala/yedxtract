@@ -12,7 +12,7 @@ import {
   getFields,
   convertToGraphmlFile,
 } from './graphml';
-import { IExportedFields } from './types';
+import { IExtractFields } from './types';
 
 async function test() {
   try {
@@ -20,7 +20,7 @@ async function test() {
     const graph = await parseGraphmlFile(data);
     const labels = getLabels(graph);
 
-    const fieldsToExport: IExportedFields = {
+    const fieldsToExport: IExtractFields = {
       common: { configuration: ['$', 'configuration'] },
       node: { label: ['y:NodeLabel', '[0]', '_'] },
       edge: { label: ['y:EdgeLabel', '[0]', '_'] },

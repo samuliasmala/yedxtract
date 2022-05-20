@@ -3,9 +3,9 @@ import Debug from 'debug';
 const debug = Debug('yedxtract:graphml');
 
 import type {
-  IDataItem,
-  IExportedFields,
-  IFields,
+  IGraphUnit,
+  IExtractFields,
+  IOutputUnit,
   IGraphml,
   ILabel,
   IXMLField,
@@ -47,9 +47,12 @@ export function convertToGraphmlFile(graph: IGraphml) {
  * @param fields - Fields to export
  * @returns All node and edge fields from the graph
  */
-export function getFields(graph: IGraphml, fields: IExportedFields): IFields[] {
+export function getFields(
+  graph: IGraphml,
+  fields: IExtractFields
+): IOutputUnit[] {
   debug('Getting node and edge labels');
-  const { nodes, edges } = getNodesAndEdges(graph);
+  const { nodes, edges } = getAllGraphUnits(graph);
 
   const nodeFields = extractFields(nodes, 'node', fields);
   const edgeFields = extractFields(edges, 'edge', fields);
@@ -66,7 +69,7 @@ export function getFields(graph: IGraphml, fields: IExportedFields): IFields[] {
 export function getLabels(graph: IGraphml): ILabel[] {
   debug('Getting node and edge labels');
 
-  const fieldsToExport: IExportedFields = {
+  const fieldsToExport: IExtractFields = {
     node: { label: ['y:NodeLabel', '[0]', '_'] },
     edge: { label: ['y:EdgeLabel', '[0]', '_'] },
   };
@@ -88,9 +91,9 @@ export function getLabels(graph: IGraphml): ILabel[] {
  * @param graph - graphml file as JS object
  * @returns Node and edge raw data
  */
-function getNodesAndEdges(graph: IGraphml) {
-  const nodes = getGraphDataItem(graph, 'node');
-  const edges = getGraphDataItem(graph, 'edge');
+function getAllGraphUnits(graph: IGraphml) {
+  const nodes = getGraphUnit(graph, 'node');
+  const edges = getGraphUnit(graph, 'edge');
 
   return { nodes, edges };
 }
@@ -104,7 +107,7 @@ function getNodesAndEdges(graph: IGraphml) {
  * @returns All items with the specified type. Only the data element
  *          corresponding to the specified key is included
  */
-function getGraphDataItem(graph: IGraphml, type: 'node' | 'edge') {
+function getGraphUnit(graph: IGraphml, type: 'node' | 'edge'): IGraphUnit[] {
   const data = graph.graphml.graph[0]?.[type];
 
   if (!data) throw new Error(`Data missing for ${type}s`);
@@ -138,7 +141,7 @@ function getGraphDataItem(graph: IGraphml, type: 'node' | 'edge') {
     if (itemData === undefined || typeof itemData === 'string')
       throw new Error('Proper item data not found');
 
-    const result: IDataItem = { id, data: itemData };
+    const result: IGraphUnit = { id, data: itemData };
 
     // Add source and target elements for edges
     if (type === 'edge') {
@@ -166,14 +169,16 @@ function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
 }
 
 /**
- * Extract specified elements from the data items.
+ * Extract specified elements (e.g., y:NodeLabel) from the IGraphUnit's
+ * children. Assume and verify that only one children (e.g. y:GenericNode) is
+ * present.
  *
  * @param data - Node or edge data extracted from the graph using
- *               `getGraphDataItem` function
- * @param elements - Elements to extract from the data
+ *               `getGraphUnit` function
+ * @param elements - Element(s) to extract from the data (e.g., y:NodeLabel)
  * @returns Array of objects with id and specified elements as keys
  */
-export function extractElements(data: IDataItem[], elements: string[]) {
+export function extractElements(data: IGraphUnit[], elements: string[]) {
   debug(`Extracting elements (${elements.join(', ')})`);
 
   const FORBIDDEN_ELEMENTS = ['id', 'source', 'target'];
@@ -194,6 +199,8 @@ export function extractElements(data: IDataItem[], elements: string[]) {
       throw new Error('Multiple child element types found from the data field');
 
     const childType = childElementTypes[0];
+
+    // Assume and verify that only one instance of the childType is present
     const childElement = getXMLFieldFromSingletonArray(item.data, childType);
 
     // Object to store extracted elements
@@ -213,16 +220,16 @@ export function extractElements(data: IDataItem[], elements: string[]) {
  * Extract certain fields from data items.
  *
  * @param data - Node or edge data extracted from the graph using
- *               `getGraphDataItem` function
+ *               `getGraphUnit` function
  * @param type - node or edge
  * @param fieldsToExtract - specify the fields which are extracted
  * @returns Array of objects containing the extracted fields
  */
 function extractFields(
-  data: IDataItem[],
+  data: IGraphUnit[],
   type: 'node' | 'edge',
-  fieldsToExtract: IExportedFields
-): IFields[] {
+  fieldsToExtract: IExtractFields
+): IOutputUnit[] {
   const fields = {
     ...(fieldsToExtract[type] ?? {}),
     ...(fieldsToExtract.common ?? {}),
@@ -246,7 +253,7 @@ function extractFields(
       }
       result[output] = data;
     }
-    const output: IFields = { id, type, fields: result };
+    const output: IOutputUnit = { id, type, fields: result };
 
     // Add source and target if they exist
     if (type === 'edge') {
