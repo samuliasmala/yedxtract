@@ -1,4 +1,4 @@
-import { write, utils } from 'xlsx';
+import { read, write, utils } from 'xlsx';
 import Debug from 'debug';
 const debug = Debug('yedxtract:excel');
 
@@ -38,7 +38,7 @@ export function createXlsx(units: IOutputUnit[], options: IXlsxOptions = {}) {
   ];
 
   // Get all columns present in data
-  const columnsPresent = [...new Set(rows.map(row => Object.keys(row)).flat())];
+  const columnsPresent = getAllColumnNames(rows);
 
   const defaultColumnsPresent = DEFAULT_COLUMNS.filter(c =>
     columnsPresent.includes(c[0])
@@ -68,10 +68,97 @@ export function createXlsx(units: IOutputUnit[], options: IXlsxOptions = {}) {
   return xlsxBuffer;
 }
 
+export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
+  debug('Importing Excel file');
+  const workbook = read(xlsx);
+  const worksheet = workbook.Sheets['Graphml'];
+
+  if (worksheet === undefined) {
+    debug('"Graphml"-sheet not present');
+    throw new Error('"Graphml"-sheet not present');
+  }
+
+  const rows: ExcelRow[] = utils.sheet_to_json(worksheet);
+
+  // Get all columns present in data
+  const columnsPresent = getAllColumnNames(rows);
+  const includedColumns = filterProperties(columnsPresent, options);
+
+  // Convert to IOutputUnit
+  return rows.map(row => {
+    // Filter out columns not in `includedColumns`
+    const filteredCols = Object.fromEntries(
+      Object.entries(row).filter(([key]) => includedColumns.includes(key))
+    );
+
+    const { id, type, source, target, validated } = validateRow(filteredCols);
+    const { unitType, label, ...fields } = validated;
+
+    const unit: IOutputUnit = {
+      id,
+      type,
+      source,
+      target,
+      unitType,
+      label,
+      fields,
+    };
+
+    removeUndefined(unit);
+
+    return unit;
+  });
+}
+
 function filterProperties(properties: string[], options: IXlsxOptions = {}) {
   return options.include
     ? properties.filter(f => options.include?.includes(f))
     : options.exclude
     ? properties.filter(f => !options.exclude?.includes(f))
     : properties;
+}
+
+function getAllColumnNames(rows: ExcelRow[]) {
+  return [...new Set(rows.map(row => Object.keys(row)).flat())];
+}
+
+function validateRow(row: ExcelRow) {
+  const { id, type, source, target, ...rest } = row;
+
+  if (typeof id !== 'string') throw new Error('Mandatory id column is missing');
+
+  if (type !== 'node' && type !== 'edge' && id[0] !== 'n' && id[0] !== 'e')
+    throw new Error(
+      'Type column is missing and not possible to deduce type from id'
+    );
+  const deducedType: 'node' | 'edge' =
+    type === 'node' || id[0] === 'n' ? 'node' : 'edge';
+
+  if (typeof source !== 'string' && source !== undefined)
+    throw new Error('Invalid source column type, must be string or undefined');
+
+  if (typeof target !== 'string' && target !== undefined)
+    throw new Error('Invalid target column type, must be string or undefined');
+
+  const validated: Record<string, string | null> = {};
+
+  for (const field in rest) {
+    const val = rest[field];
+    if (typeof val !== 'string' && val !== null)
+      throw new Error(`Invalid type in ${field} column`);
+    validated[field] = val;
+  }
+
+  return {
+    id,
+    type: deducedType,
+    source,
+    target,
+    validated,
+  };
+}
+
+function removeUndefined(obj: IOutputUnit) {
+  const keys = Object.keys(obj) as Array<keyof typeof obj>;
+  keys.forEach(key => obj[key] === undefined && delete obj[key]);
 }

@@ -11,10 +11,11 @@ import {
   getUnitsFromGraph,
   convertToGraphmlFormat,
 } from './graphml';
-import { createXlsx } from './excel';
+import { createXlsx, importXlsx } from './excel';
 import type { IExtractFields } from './types';
 
-async function test() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function testExport() {
   try {
     const data = await fs.readFile('./data/simple.graphml', 'utf-8');
     const graph = await parseGraphmlFormat(data);
@@ -40,4 +41,18 @@ async function test() {
   }
 }
 
-test();
+async function testImport() {
+  try {
+    const data = await fs.readFile('./data/output.xlsx');
+    const units = importXlsx(data, { include: ['id', 'label'] });
+    debug(units);
+    //const xml = convertToGraphmlFormat(graph);
+    //await fs.writeFile('./data/output.graphml', xml, 'utf-8');
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      debug('Error: ' + err.message);
+    }
+  }
+}
+
+testImport();

@@ -42,8 +42,8 @@ export interface IOutputUnit {
   type: 'node' | 'edge';
   source?: string;
   target?: string;
-  unitType: string;
-  label: string | null;
+  unitType?: string | null;
+  label?: string | null;
   fields: Record<string, string | null>;
 }
 
