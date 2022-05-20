@@ -22,9 +22,19 @@ export interface IGraphml {
 
 export interface IGraphUnit {
   id: string;
+  type: 'node' | 'edge';
   source?: string;
   target?: string;
   data: IXMLField;
+}
+
+export interface IExtractedGraphUnit {
+  id: string;
+  type: 'node' | 'edge';
+  source?: string;
+  target?: string;
+  unitType: string;
+  elements: IXMLField;
 }
 
 export interface ILabel {
@@ -40,6 +50,7 @@ export interface IOutputUnit {
   type: 'node' | 'edge';
   source?: string;
   target?: string;
+  unitType: string;
   fields: Record<string, string | null>;
 }
 
@@ -51,4 +62,10 @@ export interface IExtractFields {
   node?: IExtractFieldsUnit;
   edge?: IExtractFieldsUnit;
   common?: IExtractFieldsUnit;
+}
+
+export interface IExtractElements {
+  node: string[];
+  edge: string[];
+  common: string[];
 }

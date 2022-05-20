@@ -11,6 +11,8 @@ import type {
   IXMLField,
   IXMLValue,
   TGraphmlKeys,
+  IExtractElements,
+  IExtractedGraphUnit,
 } from './types';
 
 /**
@@ -47,17 +49,11 @@ export function convertToGraphmlFile(graph: IGraphml) {
  * @param fields - Fields to export
  * @returns All node and edge fields from the graph
  */
-export function getFields(
-  graph: IGraphml,
-  fields: IExtractFields
-): IOutputUnit[] {
-  debug('Getting node and edge labels');
-  const { nodes, edges } = getAllGraphUnits(graph);
+export function getFields(graph: IGraphml, fields: IExtractFields) {
+  debug('Getting node and edge fields');
+  const graphUnits = getAllGraphUnits(graph);
 
-  const nodeFields = extractFields(nodes, 'node', fields);
-  const edgeFields = extractFields(edges, 'edge', fields);
-
-  return [...nodeFields, ...edgeFields];
+  return extractFields(graphUnits, fields);
 }
 
 /**
@@ -95,7 +91,7 @@ function getAllGraphUnits(graph: IGraphml) {
   const nodes = getGraphUnit(graph, 'node');
   const edges = getGraphUnit(graph, 'edge');
 
-  return { nodes, edges };
+  return [...nodes, ...edges];
 }
 
 /**
@@ -141,7 +137,7 @@ function getGraphUnit(graph: IGraphml, type: 'node' | 'edge'): IGraphUnit[] {
     if (itemData === undefined || typeof itemData === 'string')
       throw new Error('Proper item data not found');
 
-    const result: IGraphUnit = { id, data: itemData };
+    const result: IGraphUnit = { id, type, data: itemData };
 
     // Add source and target elements for edges
     if (type === 'edge') {
@@ -178,15 +174,13 @@ function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
  * @param elements - Element(s) to extract from the data (e.g., y:NodeLabel)
  * @returns Array of objects with id and specified elements as keys
  */
-export function extractElements(data: IGraphUnit[], elements: string[]) {
-  debug(`Extracting elements (${elements.join(', ')})`);
+export function extractElements(
+  data: IGraphUnit[],
+  elements: IExtractElements
+): IExtractedGraphUnit[] {
+  const allElements = [...elements.node, ...elements.edge, ...elements.common];
 
-  const FORBIDDEN_ELEMENTS = ['id', 'source', 'target'];
-
-  for (const fe of FORBIDDEN_ELEMENTS) {
-    if (elements.includes(fe))
-      throw new Error(fe + ' cannot be specified as a field');
-  }
+  debug(`Extracting elements (${allElements.join(', ')})`);
 
   return data.map(item => {
     // Get item.data's different child element types, exclude $ which contais
@@ -204,12 +198,18 @@ export function extractElements(data: IGraphUnit[], elements: string[]) {
     const childElement = getXMLFieldFromSingletonArray(item.data, childType);
 
     // Object to store extracted elements
-    const result: IXMLField = { id: item.id };
+    const result: IExtractedGraphUnit = {
+      id: item.id,
+      type: item.type,
+      unitType: childType,
+      elements: {},
+    };
+
     if (item.source !== undefined) result.source = item.source;
     if (item.target !== undefined) result.target = item.target;
 
-    for (const element of elements) {
-      result[element] = childElement[element];
+    for (const element of [...elements[item.type], ...elements.common]) {
+      result.elements[element] = childElement[element];
     }
 
     return result;
@@ -227,38 +227,46 @@ export function extractElements(data: IGraphUnit[], elements: string[]) {
  */
 function extractFields(
   data: IGraphUnit[],
-  type: 'node' | 'edge',
   fieldsToExtract: IExtractFields
 ): IOutputUnit[] {
-  const fields = {
-    ...(fieldsToExtract[type] ?? {}),
-    ...(fieldsToExtract.common ?? {}),
-  };
-
   // Get the first element from the `fieldsToExtract` object arrays in order to
   // extract the final field
-  const elementsToExtract = Object.values(fields).map(f => f[0]);
+  const elementsToExtract: IExtractElements = {
+    node: Object.values(fieldsToExtract.node ?? []).map(f => f[0]),
+    edge: Object.values(fieldsToExtract.edge ?? []).map(f => f[0]),
+    common: Object.values(fieldsToExtract.common ?? []).map(f => f[0]),
+  };
+
   const elements = extractElements(data, elementsToExtract);
 
   return elements.map(element => {
-    const id = getNestedString(element, ['id']);
     const result: Record<string, string | null> = {};
+
+    const fields = {
+      ...(fieldsToExtract[element.type] ?? {}),
+      ...(fieldsToExtract.common ?? {}),
+    };
 
     for (const output in fields) {
       let data;
       try {
-        data = getNestedString(element, fields[output]);
+        data = getNestedString(element.elements, fields[output]);
       } catch (err) {
         data = null;
       }
       result[output] = data;
     }
-    const output: IOutputUnit = { id, type, fields: result };
+    const output: IOutputUnit = {
+      id: element.id,
+      type: element.type,
+      unitType: element.unitType,
+      fields: result,
+    };
 
     // Add source and target if they exist
-    if (type === 'edge') {
-      output.source = getNestedString(element, ['source']);
-      output.target = getNestedString(element, ['target']);
+    if (element.type === 'edge') {
+      output.source = element.source;
+      output.target = element.target;
     }
     return output;
   });
