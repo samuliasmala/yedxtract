@@ -6,29 +6,21 @@ import { promises as fs } from 'fs';
 import Debug from 'debug';
 const debug = Debug('yedxtract');
 
-import {
-  parseGraphmlFile,
-  getLabels,
-  getFields,
-  convertToGraphmlFile,
-} from './graphml';
+import { parseGraphmlFile, getUnits, convertToGraphmlFile } from './graphml';
 import { IExtractFields } from './types';
 
 async function test() {
   try {
     const data = await fs.readFile('./data/simple.graphml', 'utf-8');
     const graph = await parseGraphmlFile(data);
-    const labels = getLabels(graph);
 
     const fieldsToExport: IExtractFields = {
-      common: { configuration: ['$', 'configuration'] },
-      node: { label: ['y:NodeLabel', '[0]', '_'] },
-      edge: { label: ['y:EdgeLabel', '[0]', '_'] },
+      node: { configuration: ['$', 'configuration'] },
     };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const fields = getFields(graph, fieldsToExport);
+    const fields = getUnits(graph, fieldsToExport);
 
-    debug(labels);
+    debug(fields);
+
     const xml = convertToGraphmlFile(graph);
     await fs.writeFile('./data/output.graphml', xml, 'utf-8');
   } catch (err: unknown) {

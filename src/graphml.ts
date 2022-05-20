@@ -7,7 +7,6 @@ import type {
   IExtractFields,
   IOutputUnit,
   IGraphml,
-  ILabel,
   IXMLField,
   IXMLValue,
   TGraphmlKeys,
@@ -31,7 +30,7 @@ export async function parseGraphmlFile(graphmlFile: string) {
  * Convert JS object to yEd editor's graphml (XML)
  *
  * @param graph - yEd editor's graphml file as JS object
- * @returns JS object converted to graphml XML
+ * @returns JS object converted to graphml XML string
  */
 export function convertToGraphmlFile(graph: IGraphml) {
   debug('Converting JS object to graphml XML string');
@@ -49,35 +48,11 @@ export function convertToGraphmlFile(graph: IGraphml) {
  * @param fields - Fields to export
  * @returns All node and edge fields from the graph
  */
-export function getFields(graph: IGraphml, fields: IExtractFields) {
+export function getUnits(graph: IGraphml, fields: IExtractFields) {
   debug('Getting node and edge fields');
   const graphUnits = getAllGraphUnits(graph);
 
   return extractFields(graphUnits, fields);
-}
-
-/**
- * Get all node and edge labels from the graph
- *
- * @param graph - graphml file as JS object
- * @returns All node and edge labels from the graph
- */
-export function getLabels(graph: IGraphml): ILabel[] {
-  debug('Getting node and edge labels');
-
-  const fieldsToExport: IExtractFields = {
-    node: { label: ['y:NodeLabel', '[0]', '_'] },
-    edge: { label: ['y:EdgeLabel', '[0]', '_'] },
-  };
-  const labels = getFields(graph, fieldsToExport);
-
-  return labels.map(label => ({
-    id: label.id,
-    type: label.type,
-    ...(label.type === 'edge' ? { source: label.source } : {}),
-    ...(label.type === 'edge' ? { target: label.target } : {}),
-    label: label.fields.label,
-  }));
 }
 
 /**
@@ -237,6 +212,11 @@ function extractFields(
     common: Object.values(fieldsToExtract.common ?? []).map(f => f[0]),
   };
 
+  // Add elements required to get labels. Duplicate elements are ok so it's fine
+  // if user adds the same elements
+  elementsToExtract.node.push('y:NodeLabel');
+  elementsToExtract.edge.push('y:EdgeLabel');
+
   const elements = extractElements(data, elementsToExtract);
 
   return elements.map(element => {
@@ -247,6 +227,7 @@ function extractFields(
       ...(fieldsToExtract.common ?? {}),
     };
 
+    // Get all user defined fields
     for (const output in fields) {
       let data;
       try {
@@ -256,10 +237,23 @@ function extractFields(
       }
       result[output] = data;
     }
+
+    // Get unit's label
+    let label;
+    try {
+      label =
+        element.type === 'node'
+          ? getNestedString(element.elements, ['y:NodeLabel', '[0]', '_'])
+          : getNestedString(element.elements, ['y:EdgeLabel', '[0]', '_']);
+    } catch (err) {
+      label = null;
+    }
+
     const output: IOutputUnit = {
       id: element.id,
       type: element.type,
       unitType: element.unitType,
+      label,
       fields: result,
     };
 

@@ -37,20 +37,13 @@ export interface IExtractedGraphUnit {
   elements: IXMLField;
 }
 
-export interface ILabel {
-  id: string;
-  type: 'node' | 'edge';
-  source?: string;
-  target?: string;
-  label: string | null;
-}
-
 export interface IOutputUnit {
   id: string;
   type: 'node' | 'edge';
   source?: string;
   target?: string;
   unitType: string;
+  label: string | null;
   fields: Record<string, string | null>;
 }
 
