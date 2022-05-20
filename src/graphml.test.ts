@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 
-import { parseGraphmlFile } from './graphml';
+import { parseGraphmlFormat } from './graphml';
 
 describe('graphml.ts', () => {
   let graphFile: string;
@@ -11,11 +11,11 @@ describe('graphml.ts', () => {
 
   describe('parseGraphmlFile()', () => {
     test('input string is not a valid graphml file', async () => {
-      await expect(parseGraphmlFile('abc')).rejects.toThrow();
+      await expect(parseGraphmlFormat('abc')).rejects.toThrow();
     });
 
     test('simple.graphml', async () => {
-      const graph = await parseGraphmlFile(graphFile);
+      const graph = await parseGraphmlFormat(graphFile);
 
       expect('graphml' in graph).toBe(true);
       expect('graph' in graph.graphml).toBe(true);

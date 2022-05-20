@@ -20,7 +20,7 @@ import type {
  * @param graphmlFile - yEd editor's graphml file as a string
  * @returns Parsed graphml file as JS object
  */
-export async function parseGraphmlFile(graphmlFile: string) {
+export async function parseGraphmlFormat(graphmlFile: string) {
   debug('Parsing graphml XML string to JS object');
   const graph: IGraphml = await parseStringPromise(graphmlFile);
   return graph;
@@ -32,7 +32,7 @@ export async function parseGraphmlFile(graphmlFile: string) {
  * @param graph - yEd editor's graphml file as JS object
  * @returns JS object converted to graphml XML string
  */
-export function convertToGraphmlFile(graph: IGraphml) {
+export function convertToGraphmlFormat(graph: IGraphml) {
   debug('Converting JS object to graphml XML string');
   const builder = new Builder({
     renderOpts: { pretty: false },
@@ -48,7 +48,7 @@ export function convertToGraphmlFile(graph: IGraphml) {
  * @param fields - Fields to export
  * @returns All node and edge fields from the graph
  */
-export function getUnits(graph: IGraphml, fields: IExtractFields) {
+export function getUnitsFromGraph(graph: IGraphml, fields: IExtractFields) {
   debug('Getting node and edge fields');
   const graphUnits = getAllGraphUnits(graph);
 

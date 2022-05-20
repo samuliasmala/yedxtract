@@ -6,22 +6,26 @@ import { promises as fs } from 'fs';
 import Debug from 'debug';
 const debug = Debug('yedxtract');
 
-import { parseGraphmlFile, getUnits, convertToGraphmlFile } from './graphml';
+import {
+  parseGraphmlFormat,
+  getUnitsFromGraph,
+  convertToGraphmlFormat,
+} from './graphml';
 import { IExtractFields } from './types';
 
 async function test() {
   try {
     const data = await fs.readFile('./data/simple.graphml', 'utf-8');
-    const graph = await parseGraphmlFile(data);
+    const graph = await parseGraphmlFormat(data);
 
     const fieldsToExport: IExtractFields = {
       node: { configuration: ['$', 'configuration'] },
     };
-    const fields = getUnits(graph, fieldsToExport);
+    const fields = getUnitsFromGraph(graph, fieldsToExport);
 
     debug(fields);
 
-    const xml = convertToGraphmlFile(graph);
+    const xml = convertToGraphmlFormat(graph);
     await fs.writeFile('./data/output.graphml', xml, 'utf-8');
   } catch (err: unknown) {
     if (err instanceof Error) {
