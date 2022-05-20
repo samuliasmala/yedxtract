@@ -1,6 +1,7 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
+    "lib": ["es2021"],
     "incremental": true,
     "sourceMap": true,
     "outDir": "build"
