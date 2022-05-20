@@ -1,5 +1,5 @@
-# Test output
-data/output.graphml
+# Test outputs
+data/output.*
 
 # Build directory
 build/
