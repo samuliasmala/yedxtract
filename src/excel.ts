@@ -2,13 +2,18 @@ import { read, write, utils } from 'xlsx';
 import Debug from 'debug';
 const debug = Debug('yedxtract:excel');
 
-import { IOutputUnit, IXlsxOptions } from './types';
+import { IMetadata, IOutputUnit, IXlsxOptions } from './types';
+import { LIB_VERSION } from './version';
 
 type ExcelCellValue = string | number | boolean | Date | null | undefined;
 type ExcelRow = Record<string, ExcelCellValue>;
 type ExcelColumn = [string, number];
 
-export function createXlsx(units: IOutputUnit[], options: IXlsxOptions = {}) {
+export function createXlsx(
+  units: IOutputUnit[],
+  metadata: IMetadata,
+  options: IXlsxOptions = {}
+) {
   debug(`Creating Excel file (${units.length} rows)`);
 
   const rows: ExcelRow[] = units.map(unit => {
@@ -58,7 +63,17 @@ export function createXlsx(units: IOutputUnit[], options: IXlsxOptions = {}) {
     width: col[1] + 0.7,
   }));
 
-  const wb = { SheetNames: ['Graphml'], Sheets: { ['Graphml']: ws } };
+  const wsMetadata = utils.aoa_to_sheet(
+    Object.entries({ ...metadata, yedxtractVersion: LIB_VERSION })
+  );
+
+  wsMetadata['!cols'] = [15, 45].map(col => ({ width: col + 0.7 }));
+
+  const wb = {
+    SheetNames: ['Metadata', 'Content'],
+    Sheets: { Content: ws, Metadata: wsMetadata },
+  };
+
   const xlsxBuffer = write(wb, {
     type: 'buffer',
     bookType: 'xlsx',

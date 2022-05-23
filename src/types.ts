@@ -66,3 +66,10 @@ export interface IXlsxOptions {
   include?: string[];
   exclude?: string[];
 }
+
+export interface IMetadata {
+  yedxtractVersion?: string;
+  yedFilename: string;
+  yedHash: string;
+  extractedFields: string;
+}
