@@ -1,6 +1,6 @@
 {
   "name": "yedxtract",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Extract texts from yEd graph editor to Excel and back",
   "engines": {
     "node": ">=12.0.0"

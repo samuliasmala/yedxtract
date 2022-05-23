@@ -14,75 +14,79 @@ import {
 } from './graphml';
 import { createXlsx, importXlsx } from './excel';
 import { readFile } from './file';
-import type { IExtractFields, IMetadata } from './types';
+import type { IExtractFields, IMetadata, IXlsxOptions } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function testExport() {
-  try {
-    const filename = 'simple.graphml';
-    const { data, hash } = await readFile('./data/' + filename);
-    const graph = await parseGraphmlFormat(data);
+export async function exportExcel(
+  inputGraphmlFile: string,
+  fieldsToExport?: IExtractFields
+) {
+  debug(`Exporting ${inputGraphmlFile}`);
+  const filename = inputGraphmlFile.split('/').pop();
+  if (filename === undefined) throw new Error('Invalid filename');
 
-    const fieldsToExport: IExtractFields = {
-      node: {
-        configuration: ['$', 'configuration'],
-        color: ['y:Fill', '[0]', '$', 'color'],
-        color2: ['y:Fill', '[0]', '$', 'color2'],
-      },
-    };
+  const { data, hash } = await readFile(inputGraphmlFile);
+  const graph = await parseGraphmlFormat(data);
 
-    const units = getUnitsFromGraph(graph, fieldsToExport);
+  const units = getUnitsFromGraph(graph, fieldsToExport ?? {});
 
-    const metadata: IMetadata = {
-      yedFilename: filename,
-      yedHash: hash,
-      extractedFields: fieldsToExport,
-    };
+  const metadata: IMetadata = {
+    yedFilename: filename,
+    yedHash: hash,
+    extractedFields: fieldsToExport ?? {},
+  };
 
-    //const xlsxFile = createXlsx(units, metadata, { include: ['id', 'type', 'label'] });
-    const xlsxFile = createXlsx(units, metadata);
-    console.log(Object.entries(metadata));
-
-    await fs.writeFile('./data/output.xlsx', xlsxFile);
-
-    //debug(units);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      debug('Error: ' + err.message);
-    }
-  }
+  const xlsxFile = createXlsx(units, metadata);
+  return xlsxFile;
 }
 
-async function testImport() {
-  try {
-    // Read imported data
-    const xlsxData = await fs.readFile('./data/output.xlsx');
-    const { units, metadata } = importXlsx(
-      xlsxData /*, { include: ['id', 'label'] }*/
+export async function exportExcelFile(
+  inputGraphmlFile: string,
+  outputXlsxFile: string,
+  fieldsToExport?: IExtractFields
+) {
+  const xlsxFile = await exportExcel(inputGraphmlFile, fieldsToExport);
+  debug(`Saving export to ${outputXlsxFile}`);
+  await fs.writeFile(outputXlsxFile, xlsxFile);
+}
+
+export async function importExcel(
+  inputGraphmlFile: string,
+  inputXlsxFile: string,
+  fieldsToImport?: IXlsxOptions
+) {
+  debug(`Importing ${inputXlsxFile}`);
+  // Read imported data
+  const xlsxData = await fs.readFile(inputXlsxFile);
+  const { units, metadata } = importXlsx(xlsxData, fieldsToImport);
+
+  // Read original graph
+  const { data, hash } = await readFile(inputGraphmlFile);
+
+  // Verify the original graph
+  if (hash !== metadata.yedHash)
+    console.warn(
+      'Provided graphml file not matching the one used to generate xlsx file'
     );
-    //debug(units);
 
-    // Read original graph
-    const { data, hash } = await readFile('./data/simple.graphml');
-    const graph = await parseGraphmlFormat(data);
+  const graph = await parseGraphmlFormat(data);
 
-    // Verify the original graph
-    if (hash !== metadata.yedHash)
-      debug(
-        'Provided graphml file not matching the one used to generate Excel'
-      );
-    else debug('Provided graphml file is matching the original file');
-
-    // Update and save graph
-    const updatedGraph = updateGraph(graph, units, metadata.extractedFields);
-    const xml = convertToGraphmlFormat(updatedGraph);
-    await fs.writeFile('./data/output.graphml', xml, 'utf-8');
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      debug('Error: ' + err.message);
-    }
-  }
+  // Update and save graph
+  const updatedGraph = updateGraph(graph, units, metadata.extractedFields);
+  const xml = convertToGraphmlFormat(updatedGraph);
+  return xml;
 }
 
-//testExport();
-testImport();
+export async function importExcelFile(
+  inputGraphmlFile: string,
+  inputXlsxFile: string,
+  outputGraphmlFile: string,
+  fieldsToImport?: IXlsxOptions
+) {
+  const xml = await importExcel(
+    inputGraphmlFile,
+    inputXlsxFile,
+    fieldsToImport
+  );
+  debug(`Saving import to ${outputGraphmlFile}`);
+  await fs.writeFile(outputGraphmlFile, xml, 'utf-8');
+}
