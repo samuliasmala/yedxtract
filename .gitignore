@@ -1,3 +1,6 @@
+# File with package version information, generated in prebuild step
+src/version.ts
+
 # Test outputs
 data/output.*
 
