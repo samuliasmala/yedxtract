@@ -78,11 +78,19 @@ export function updateGraph(graph: IGraphml, newUnits: IOutputUnit[]) {
     const { source, target, label } = unit;
     if (source !== undefined) element.attributes.source = source;
     if (target !== undefined) element.attributes.target = target;
-    if (label !== undefined && label !== null) {
+    if (label !== undefined) {
       if (element.type === 'node')
-        setNestedProperty(element.elements, ['y:NodeLabel', '[0]', '_'], label);
+        setNestedProperty(
+          element.elements,
+          ['y:NodeLabel', '[0]', '_'],
+          label ?? ''
+        );
       else
-        setNestedProperty(element.elements, ['y:EdgeLabel', '[0]', '_'], label);
+        setNestedProperty(
+          element.elements,
+          ['y:EdgeLabel', '[0]', '_'],
+          label ?? ''
+        );
     }
   }
 

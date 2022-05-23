@@ -67,7 +67,14 @@ export function createXlsx(units: IOutputUnit[], options: IXlsxOptions = {}) {
 
   return xlsxBuffer;
 }
-
+/**
+ * Import file Excel to update yEd values. Note that empty cells are skipped. If
+ * you want to set empty string to a node or edge, set corresponding Excel cell
+ * to #NULL!
+ * @param xlsx - Excel file contents
+ * @param options - Options object to define imported fields
+ * @returns List of values for nodes and edges
+ */
 export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
   debug('Importing Excel file');
   const workbook = read(xlsx);
