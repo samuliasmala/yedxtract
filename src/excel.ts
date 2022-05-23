@@ -64,7 +64,12 @@ export function createXlsx(
   }));
 
   const wsMetadata = utils.aoa_to_sheet(
-    Object.entries({ ...metadata, yedxtractVersion: LIB_VERSION })
+    Object.entries({
+      yedxtractVersion: LIB_VERSION,
+      yedFilename: metadata.yedFilename,
+      yedHash: metadata.yedHash,
+      extractedFields: JSON.stringify(metadata.extractedFields),
+    })
   );
 
   wsMetadata['!cols'] = [15, 45].map(col => ({ width: col + 0.7 }));
@@ -93,8 +98,21 @@ export function createXlsx(
 export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
   debug('Importing Excel file');
   const workbook = read(xlsx);
-  const worksheet = workbook.Sheets['Graphml'];
 
+  const wsMetadata = workbook.Sheets['Metadata'];
+  if (wsMetadata === undefined) {
+    debug('"Metadata"-sheet not present');
+    throw new Error('"Metadata"-sheet not present');
+  }
+  const metadata = Object.fromEntries(
+    utils.sheet_to_json(wsMetadata, { header: 1 })
+  );
+
+  metadata.extractedFields = JSON.parse(metadata.extractedFields);
+
+  if (!instanceOfMetadata(metadata)) throw new Error('Invalid metadata sheet');
+
+  const worksheet = workbook.Sheets['Content'];
   if (worksheet === undefined) {
     debug('"Graphml"-sheet not present');
     throw new Error('"Graphml"-sheet not present');
@@ -107,7 +125,7 @@ export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
   const includedColumns = filterProperties(columnsPresent, options);
 
   // Convert to IOutputUnit
-  return rows.map(row => {
+  const units = rows.map(row => {
     // Filter out columns not in `includedColumns`
     const filteredCols = Object.fromEntries(
       Object.entries(row).filter(([key]) => includedColumns.includes(key))
@@ -130,6 +148,8 @@ export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
 
     return unit;
   });
+
+  return { units, metadata };
 }
 
 function filterProperties(properties: string[], options: IXlsxOptions = {}) {
@@ -183,4 +203,15 @@ function validateRow(row: ExcelRow) {
 function removeUndefined(obj: IOutputUnit) {
   const keys = Object.keys(obj) as Array<keyof typeof obj>;
   keys.forEach(key => obj[key] === undefined && delete obj[key]);
+}
+
+function instanceOfMetadata(obj: unknown): obj is IMetadata {
+  if (typeof obj !== 'object' || obj === null) return false;
+  // obj is now type object
+  return (
+    'yedxtractVersion' in obj &&
+    'yedFilename' in obj &&
+    'yedHash' in obj &&
+    'extractedFields' in obj
+  );
 }

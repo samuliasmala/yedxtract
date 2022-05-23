@@ -32,7 +32,7 @@ async function testExport() {
     const metadata: IMetadata = {
       yedFilename: filename,
       yedHash: hash,
-      extractedFields: JSON.stringify(fieldsToExport),
+      extractedFields: fieldsToExport,
     };
 
     //const xlsxFile = createXlsx(units, metadata, { include: ['id', 'type', 'label'] });
@@ -53,15 +53,24 @@ async function testImport() {
   try {
     // Read imported data
     const xlsxData = await fs.readFile('./data/output.xlsx');
-    const units = importXlsx(xlsxData /*, { include: ['id', 'label'] }*/);
-    debug(units);
+    const { units, metadata } = importXlsx(
+      xlsxData /*, { include: ['id', 'label'] }*/
+    );
+    //debug(units);
 
     // Read original graph
-    const data = await fs.readFile('./data/simple.graphml', 'utf-8');
+    const { data, hash } = await readFile('./data/simple.graphml');
     const graph = await parseGraphmlFormat(data);
 
+    // Verify the original graph
+    if (hash !== metadata.yedHash)
+      debug(
+        'Provided graphml file not matching the one used to generate Excel'
+      );
+    else debug('Provided graphml file is matching the original file');
+
     // Update and save graph
-    const updatedGraph = updateGraph(graph, units);
+    const updatedGraph = updateGraph(graph, units, metadata.extractedFields);
     const xml = convertToGraphmlFormat(updatedGraph);
     await fs.writeFile('./data/output.graphml', xml, 'utf-8');
   } catch (err: unknown) {
@@ -71,5 +80,5 @@ async function testImport() {
   }
 }
 
-testExport();
-//testImport();
+//testExport();
+testImport();

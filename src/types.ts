@@ -71,5 +71,5 @@ export interface IMetadata {
   yedxtractVersion?: string;
   yedFilename: string;
   yedHash: string;
-  extractedFields: string;
+  extractedFields: IExtractFields;
 }
