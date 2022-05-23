@@ -56,6 +56,40 @@ export function getUnitsFromGraph(graph: IGraphml, fields: IExtractFields) {
 }
 
 /**
+ * Update graph by merging `newUnits` to the existing graph
+ *
+ * @param graph - Graphml file as JS object
+ * @param newUnits - Updated values for nodes and edges
+ * @returns Updated graph
+ */
+export function updateGraph(graph: IGraphml, newUnits: IOutputUnit[]) {
+  const oldUnits = getAllGraphUnits(graph);
+  const elements = extractElements(oldUnits);
+
+  for (const unit of newUnits) {
+    // Find corresponding element
+    const element = elements.find(e => e.id === unit.id);
+    if (!element) {
+      console.warn(`Unknown input row (id=${unit.id})`);
+      continue;
+    }
+
+    // Update fixed fields (source, target, label)
+    const { source, target, label } = unit;
+    if (source !== undefined) element.attributes.source = source;
+    if (target !== undefined) element.attributes.target = target;
+    if (label !== undefined && label !== null) {
+      if (element.type === 'node')
+        setNestedProperty(element.elements, ['y:NodeLabel', '[0]', '_'], label);
+      else
+        setNestedProperty(element.elements, ['y:EdgeLabel', '[0]', '_'], label);
+    }
+  }
+
+  return graph;
+}
+
+/**
  * Get node and edge raw data, keep only data element corresponding to the
  * nodegraphics/edgegraphics keys
  *
@@ -112,7 +146,12 @@ function getGraphUnit(graph: IGraphml, type: 'node' | 'edge'): IGraphUnit[] {
     if (itemData === undefined || typeof itemData === 'string')
       throw new Error('Proper item data not found');
 
-    const result: IGraphUnit = { id, type, data: itemData };
+    const result: IGraphUnit = {
+      id,
+      type,
+      data: itemData,
+      attributes: getNestedXMLField(item, ['$']),
+    };
 
     // Add source and target elements for edges
     if (type === 'edge') {
@@ -183,6 +222,8 @@ export function extractElements(
     const result: IExtractedGraphUnit = {
       id: item.id,
       type: item.type,
+      data: item.data,
+      attributes: item.attributes,
       unitType: childType,
       elements: {},
     };
@@ -305,6 +346,17 @@ function getNestedProperty(data: IXMLValue, keys: Array<string | number>) {
   }
 
   return value;
+}
+
+function setNestedProperty(
+  data: IXMLValue,
+  keys: Array<string | number>,
+  value: IXMLValue
+) {
+  if (keys.length < 1) throw new Error('Keys cannot be empty');
+  const lastKey = keys.slice(-1)[0];
+  const obj = getNestedXMLField(data, keys.slice(0, -1));
+  obj[lastKey] = value;
 }
 
 function getXMLFieldFromSingletonArray(data: IXMLField, field: string) {

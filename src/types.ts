@@ -26,13 +26,12 @@ export interface IGraphUnit {
   source?: string;
   target?: string;
   data: IXMLField;
+  // Reference to object attributes which contain source and target values, used
+  // to update the graph
+  attributes: IXMLField;
 }
 
-export interface IExtractedGraphUnit {
-  id: string;
-  type: 'node' | 'edge';
-  source?: string;
-  target?: string;
+export interface IExtractedGraphUnit extends IGraphUnit {
   unitType: string;
   elements: IXMLField;
 }

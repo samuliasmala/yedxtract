@@ -10,6 +10,7 @@ import {
   parseGraphmlFormat,
   getUnitsFromGraph,
   convertToGraphmlFormat,
+  updateGraph,
 } from './graphml';
 import { createXlsx, importXlsx } from './excel';
 import type { IExtractFields } from './types';
@@ -31,9 +32,6 @@ async function testExport() {
     await fs.writeFile('./data/output.xlsx', xlsxFile);
 
     //debug(units);
-
-    const xml = convertToGraphmlFormat(graph);
-    await fs.writeFile('./data/output.graphml', xml, 'utf-8');
   } catch (err: unknown) {
     if (err instanceof Error) {
       debug('Error: ' + err.message);
@@ -43,11 +41,19 @@ async function testExport() {
 
 async function testImport() {
   try {
-    const data = await fs.readFile('./data/output.xlsx');
-    const units = importXlsx(data, { include: ['id', 'label'] });
+    // Read imported data
+    const xlsxData = await fs.readFile('./data/output.xlsx');
+    const units = importXlsx(xlsxData /*, { include: ['id', 'label'] }*/);
     debug(units);
-    //const xml = convertToGraphmlFormat(graph);
-    //await fs.writeFile('./data/output.graphml', xml, 'utf-8');
+
+    // Read original graph
+    const data = await fs.readFile('./data/simple.graphml', 'utf-8');
+    const graph = await parseGraphmlFormat(data);
+
+    // Update and save graph
+    const updatedGraph = updateGraph(graph, units);
+    const xml = convertToGraphmlFormat(updatedGraph);
+    await fs.writeFile('./data/output.graphml', xml, 'utf-8');
   } catch (err: unknown) {
     if (err instanceof Error) {
       debug('Error: ' + err.message);
@@ -55,4 +61,5 @@ async function testImport() {
   }
 }
 
+//testExport();
 testImport();
