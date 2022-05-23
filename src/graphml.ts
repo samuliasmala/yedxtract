@@ -146,16 +146,23 @@ function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
  *
  * @param data - Node or edge data extracted from the graph using
  *               `getGraphUnit` function
- * @param elements - Element(s) to extract from the data (e.g., y:NodeLabel)
+ * @param [elements] - Element(s) to extract from the data (e.g., y:NodeLabel)
  * @returns Array of objects with id and specified elements as keys
  */
 export function extractElements(
   data: IGraphUnit[],
-  elements: IExtractElements
+  elements?: IExtractElements
 ): IExtractedGraphUnit[] {
-  const allElements = [...elements.node, ...elements.edge, ...elements.common];
-
-  debug(`Extracting elements (${allElements.join(', ')})`);
+  if (elements) {
+    const allElements = [
+      ...elements.node,
+      ...elements.edge,
+      ...elements.common,
+    ];
+    debug(`Extracting elements (${allElements.join(', ')})`);
+  } else {
+    debug('Extracting all elements');
+  }
 
   return data.map(item => {
     // Get item.data's different child element types, exclude $ which contais
@@ -183,8 +190,12 @@ export function extractElements(
     if (item.source !== undefined) result.source = item.source;
     if (item.target !== undefined) result.target = item.target;
 
-    for (const element of [...elements[item.type], ...elements.common]) {
-      result.elements[element] = childElement[element];
+    if (elements) {
+      for (const element of [...elements[item.type], ...elements.common]) {
+        result.elements[element] = childElement[element];
+      }
+    } else {
+      result.elements = childElement;
     }
 
     return result;
@@ -204,20 +215,7 @@ function extractFields(
   data: IGraphUnit[],
   fieldsToExtract: IExtractFields
 ): IOutputUnit[] {
-  // Get the first element from the `fieldsToExtract` object arrays in order to
-  // extract the final field
-  const elementsToExtract: IExtractElements = {
-    node: Object.values(fieldsToExtract.node ?? []).map(f => f[0]),
-    edge: Object.values(fieldsToExtract.edge ?? []).map(f => f[0]),
-    common: Object.values(fieldsToExtract.common ?? []).map(f => f[0]),
-  };
-
-  // Add elements required to get labels. Duplicate elements are ok so it's fine
-  // if user adds the same elements
-  elementsToExtract.node.push('y:NodeLabel');
-  elementsToExtract.edge.push('y:EdgeLabel');
-
-  const elements = extractElements(data, elementsToExtract);
+  const elements = extractElements(data);
 
   return elements.map(element => {
     const result: Record<string, string | null> = {};
