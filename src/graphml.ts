@@ -62,7 +62,11 @@ export function getUnitsFromGraph(graph: IGraphml, fields: IExtractFields) {
  * @param newUnits - Updated values for nodes and edges
  * @returns Updated graph
  */
-export function updateGraph(graph: IGraphml, newUnits: IOutputUnit[]) {
+export function updateGraph(
+  graph: IGraphml,
+  newUnits: IOutputUnit[],
+  extractedFields: IExtractFields
+) {
   const oldUnits = getAllGraphUnits(graph);
   const elements = extractElements(oldUnits);
 
@@ -91,6 +95,18 @@ export function updateGraph(graph: IGraphml, newUnits: IOutputUnit[]) {
           ['y:EdgeLabel', '[0]', '_'],
           label ?? ''
         );
+    }
+
+    // Update user-defined fields
+    const fields = {
+      ...(extractedFields[element.type] ?? {}),
+      ...(extractedFields.common ?? {}),
+    };
+
+    for (const [field, val] of Object.entries(unit.fields)) {
+      if (val === undefined) continue;
+      const propPath = fields[field];
+      setNestedProperty(element.elements, propPath, val ?? '');
     }
   }
 

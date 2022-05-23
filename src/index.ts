@@ -24,7 +24,11 @@ async function testExport() {
     const graph = await parseGraphmlFormat(data);
 
     const fieldsToExport: IExtractFields = {
-      node: { configuration: ['$', 'configuration'] },
+      node: {
+        configuration: ['$', 'configuration'],
+        color: ['y:Fill', '[0]', '$', 'color'],
+        color2: ['y:Fill', '[0]', '$', 'color2'],
+      },
     };
 
     const units = getUnitsFromGraph(graph, fieldsToExport);
