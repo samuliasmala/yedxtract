@@ -27,6 +27,7 @@
     "build:watch": "tsc --watch --preserveWatchOutput --skipLibCheck",
     "pretest": "npm run build",
     "test": "jest",
+    "test:watch": "concurrently --kill-others --handle-input --prefix none --passthrough-arguments  \"jest --watchAll {@}\" \"npm run build:watch\" -- ",
     "posttest": "npm run lint",
     "dev": "concurrently --kill-others --handle-input --prefix none \"DEBUG=yedxtract* DEBUG_COLORS=1 nodemon build/index.js\" \"npm run build:watch\"",
     "debug": "concurrently --kill-others --handle-input --prefix none \"DEBUG=yedxtract* DEBUG_COLORS=1 nodemon --inspect-brk build/index.js\" \"npm run build:watch\"",
