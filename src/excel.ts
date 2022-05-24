@@ -77,7 +77,7 @@ export function createXlsx(
   wsMetadata['!cols'] = [15, 45].map(col => ({ width: col + 0.7 }));
 
   const wb = {
-    SheetNames: ['Metadata', 'Content'],
+    SheetNames: ['Content', 'Metadata'],
     Sheets: { Content: ws, Metadata: wsMetadata },
   };
 
