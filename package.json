@@ -20,6 +20,7 @@
     "xlsx"
   ],
   "scripts": {
+    "prepublishOnly": "npm run clean && npm run test && npm run clean && npm run build",
     "prestart": "npm run build",
     "start": "node build/index.js",
     "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
