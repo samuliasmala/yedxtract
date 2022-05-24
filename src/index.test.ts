@@ -1,10 +1,13 @@
 import { promises as fs } from 'fs';
 
-import { exportExcel } from '.';
+import { exportExcel, importExcel } from '.';
+import { readFile } from './file';
 import type { IExtractFields } from './types';
 
-const SAMPLE_GRAPH = __dirname + '/../data/simple.graphml';
-const SAMPLE_EXPORT = __dirname + '/../data/simple.xlsx';
+const ORIGINAL_GRAPH = __dirname + '/../data/simple.graphml';
+const OUTPUT_EXCEL = __dirname + '/../data/simple.xlsx';
+const TRANSLATED_EXCEL = __dirname + '/../data/simple-translated.xlsx';
+const TRANSLATED_GRAPH = __dirname + '/../data/simple-translated.graphml';
 
 describe('E2E tests', () => {
   test('export from graphml to xlsx', async () => {
@@ -16,11 +19,21 @@ describe('E2E tests', () => {
       },
     };
 
-    const xlsxFile = await exportExcel(SAMPLE_GRAPH, fieldsToExport);
+    const xlsxFile = await exportExcel(ORIGINAL_GRAPH, fieldsToExport);
 
     // Compare to existing binary file
-    const expectedXlsxFile = await fs.readFile(SAMPLE_EXPORT);
+    const expectedXlsxFile = await fs.readFile(OUTPUT_EXCEL);
+    expect(xlsxFile).toEqual(expectedXlsxFile);
+  });
 
-    expect(expectedXlsxFile).toEqual(xlsxFile);
+  test('import from xlsx to graphml', async () => {
+    // Read imported data
+    const graphmlFile = await importExcel(ORIGINAL_GRAPH, TRANSLATED_EXCEL, {
+      include: ['id', 'label'],
+    });
+
+    // Compare to existing binary file
+    const { data: expectedGraph } = await readFile(TRANSLATED_GRAPH);
+    expect(graphmlFile).toEqual(expectedGraph);
   });
 });
