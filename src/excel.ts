@@ -67,7 +67,7 @@ export function createXlsx(
     Object.entries({
       // Use fixed version number for tests, otherwise would need to generate
       // a new Excel file for every release to pass the test
-      yedxtractVersion: process.env.NODE_ENV !== 'test' ? LIB_VERSION : '0.1.0',
+      yedxtractVersion: process.env.NODE_ENV !== 'test' ? LIB_VERSION : 'test',
       yedFilename: metadata.yedFilename,
       yedHash: metadata.yedHash,
       extractedFields: JSON.stringify(metadata.extractedFields),
