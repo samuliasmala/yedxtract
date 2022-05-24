@@ -73,3 +73,10 @@ export interface IMetadata {
   yedHash: string;
   extractedFields: IExtractFields;
 }
+
+export type TPostProcess = (row: IOutputUnit) => IOutputUnit | null;
+
+export interface IExportOptions {
+  fieldsToExport?: IExtractFields;
+  postProcess?: TPostProcess;
+}

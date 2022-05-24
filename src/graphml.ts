@@ -12,6 +12,7 @@ import type {
   TGraphmlKeys,
   IExtractElements,
   IExtractedGraphUnit,
+  IExportOptions,
 } from './types';
 
 /**
@@ -48,11 +49,25 @@ export function convertToGraphmlFormat(graph: IGraphml) {
  * @param fields - Fields to export
  * @returns All node and edge fields from the graph
  */
-export function getUnitsFromGraph(graph: IGraphml, fields: IExtractFields) {
+export function getUnitsFromGraph(graph: IGraphml, options?: IExportOptions) {
   debug('Getting node and edge fields');
+
   const graphUnits = getAllGraphUnits(graph);
 
-  return extractFields(graphUnits, fields);
+  if (options === undefined) options = {};
+  let units = extractFields(graphUnits, options.fieldsToExport ?? {});
+
+  const { postProcess } = options;
+  if (typeof postProcess === 'function') {
+    debug('Postprocessing graph units');
+    units = units.reduce<IOutputUnit[]>((acc, unit) => {
+      const postProcessedUnit = postProcess(unit);
+      if (postProcessedUnit != null) acc.push(postProcessedUnit);
+      return acc;
+    }, []);
+  }
+
+  return units;
 }
 
 /**

@@ -14,11 +14,12 @@ import {
 } from './graphml';
 import { createXlsx, importXlsx } from './excel';
 import { readFile } from './file';
-import type { IExtractFields, IMetadata, IXlsxOptions } from './types';
+
+import type { IExportOptions, IMetadata, IXlsxOptions } from './types';
 
 export async function exportExcel(
   inputGraphmlFile: string,
-  fieldsToExport?: IExtractFields
+  options?: IExportOptions
 ) {
   debug(`Exporting ${inputGraphmlFile}`);
   const filename = inputGraphmlFile.split('/').pop();
@@ -27,12 +28,12 @@ export async function exportExcel(
   const { data, hash } = await readFile(inputGraphmlFile);
   const graph = await parseGraphmlFormat(data);
 
-  const units = getUnitsFromGraph(graph, fieldsToExport ?? {});
+  const units = getUnitsFromGraph(graph, options);
 
   const metadata: IMetadata = {
     yedFilename: filename,
     yedHash: hash,
-    extractedFields: fieldsToExport ?? {},
+    extractedFields: options?.fieldsToExport ?? {},
   };
 
   const xlsxFile = createXlsx(units, metadata);
@@ -42,9 +43,9 @@ export async function exportExcel(
 export async function exportExcelFile(
   inputGraphmlFile: string,
   outputXlsxFile: string,
-  fieldsToExport?: IExtractFields
+  options?: IExportOptions
 ) {
-  const xlsxFile = await exportExcel(inputGraphmlFile, fieldsToExport);
+  const xlsxFile = await exportExcel(inputGraphmlFile, options);
   debug(`Saving export to ${outputXlsxFile}`);
   await fs.writeFile(outputXlsxFile, xlsxFile);
 }
