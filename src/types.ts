@@ -79,6 +79,7 @@ export type PostProcess = (row: OutputUnit) => OutputUnit | null;
 
 export interface ExportOptions {
   fieldsToExport?: ExtractFields;
+  columnsToExcel?: XlsxOptions;
   postProcess?: PostProcess;
 }
 

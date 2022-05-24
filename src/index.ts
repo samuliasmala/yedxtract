@@ -36,7 +36,7 @@ export async function exportExcel(
     extractedFields: options?.fieldsToExport ?? {},
   };
 
-  const xlsxFile = createXlsx(units, metadata);
+  const xlsxFile = createXlsx(units, metadata, options?.columnsToExcel);
   return xlsxFile;
 }
 
