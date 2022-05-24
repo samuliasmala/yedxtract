@@ -8,7 +8,8 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "exports": {
-    "types": "./build/types.d.ts"
+    ".": "./build/index.js",
+    "./types": "./build/types.d.ts"
   },
   "files": [
     "build"
