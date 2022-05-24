@@ -15,7 +15,7 @@ import {
 import { createXlsx, importXlsx } from './excel';
 import { readFile } from './file';
 
-import type { IExportOptions, IMetadata, IXlsxOptions } from './types';
+import type { IExportOptions, IImportOptions, IMetadata } from './types';
 
 export async function exportExcel(
   inputGraphmlFile: string,
@@ -53,12 +53,12 @@ export async function exportExcelFile(
 export async function importExcel(
   inputGraphmlFile: string,
   inputXlsxFile: string,
-  fieldsToImport?: IXlsxOptions
+  options?: IImportOptions
 ) {
   debug(`Importing ${inputXlsxFile}`);
   // Read imported data
   const xlsxData = await fs.readFile(inputXlsxFile);
-  const { units, metadata } = importXlsx(xlsxData, fieldsToImport);
+  const { units, metadata } = importXlsx(xlsxData, options);
 
   // Read original graph
   const { data, hash } = await readFile(inputGraphmlFile);
@@ -81,13 +81,9 @@ export async function importExcelFile(
   inputGraphmlFile: string,
   inputXlsxFile: string,
   outputGraphmlFile: string,
-  fieldsToImport?: IXlsxOptions
+  options?: IImportOptions
 ) {
-  const xml = await importExcel(
-    inputGraphmlFile,
-    inputXlsxFile,
-    fieldsToImport
-  );
+  const xml = await importExcel(inputGraphmlFile, inputXlsxFile, options);
   debug(`Saving import to ${outputGraphmlFile}`);
   await fs.writeFile(outputGraphmlFile, xml, 'utf-8');
 }

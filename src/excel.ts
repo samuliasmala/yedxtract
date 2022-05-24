@@ -2,7 +2,7 @@ import { read, write, utils } from 'xlsx';
 import Debug from 'debug';
 const debug = Debug('yedxtract:excel');
 
-import { IMetadata, IOutputUnit, IXlsxOptions } from './types';
+import { IImportOptions, IMetadata, IOutputUnit, IXlsxOptions } from './types';
 import { LIB_VERSION } from './version';
 
 type ExcelCellValue = string | number | boolean | Date | null | undefined;
@@ -95,7 +95,9 @@ export function createXlsx(
  * @param options - Options object to define imported fields
  * @returns List of values for nodes and edges
  */
-export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
+export function importXlsx(xlsx: Buffer, options?: IImportOptions) {
+  if (options === undefined) options = {};
+
   debug('Importing Excel file');
   const workbook = read(xlsx);
 
@@ -122,10 +124,13 @@ export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
 
   // Get all columns present in data
   const columnsPresent = getAllColumnNames(rows);
-  const includedColumns = filterProperties(columnsPresent, options);
+  const includedColumns = filterProperties(
+    columnsPresent,
+    options?.fieldsToImport ?? {}
+  );
 
   // Convert to IOutputUnit
-  const units = rows.map(row => {
+  let units = rows.map(row => {
     // Filter out columns not in `includedColumns`
     const filteredCols = Object.fromEntries(
       Object.entries(row).filter(([key]) => includedColumns.includes(key))
@@ -148,6 +153,16 @@ export function importXlsx(xlsx: Buffer, options: IXlsxOptions = {}) {
 
     return unit;
   });
+
+  const { postProcess } = options;
+  if (typeof postProcess === 'function') {
+    debug('Postprocessing excel units');
+    units = units.reduce<IOutputUnit[]>((acc, unit) => {
+      const postProcessedUnit = postProcess(unit);
+      if (postProcessedUnit != null) acc.push(postProcessedUnit);
+      return acc;
+    }, []);
+  }
 
   return { units, metadata };
 }

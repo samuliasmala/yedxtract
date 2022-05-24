@@ -31,7 +31,7 @@ describe('E2E tests', () => {
   test('import from xlsx to graphml', async () => {
     // Read imported data
     const graphmlFile = await importExcel(ORIGINAL_GRAPH, TRANSLATED_EXCEL, {
-      include: ['id', 'label'],
+      fieldsToImport: { include: ['id', 'label'] },
     });
 
     // Compare to existing binary file

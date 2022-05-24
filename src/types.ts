@@ -80,3 +80,8 @@ export interface IExportOptions {
   fieldsToExport?: IExtractFields;
   postProcess?: TPostProcess;
 }
+
+export interface IImportOptions {
+  postProcess?: TPostProcess;
+  fieldsToImport?: IXlsxOptions;
+}
