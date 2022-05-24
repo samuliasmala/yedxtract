@@ -121,6 +121,12 @@ export function updateGraph(
     for (const [field, val] of Object.entries(unit.fields)) {
       if (val === undefined) continue;
       const propPath = fields[field];
+      if (propPath == null) {
+        console.warn(
+          `Field without entry in extractedFields metadata, skipping (${field})`
+        );
+        continue;
+      }
       setNestedProperty(element.elements, propPath, val ?? '');
     }
   }
