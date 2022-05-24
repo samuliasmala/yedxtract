@@ -4,6 +4,7 @@
     "warnOnUnsupportedTypeScriptVersion": false
   },
   "rules": {
+    "eqeqeq": ["error", "always", {"null": "ignore"}],
     "prettier/prettier": "warn"
   }
 }
