@@ -3,16 +3,16 @@ import Debug from 'debug';
 const debug = Debug('yedxtract:graphml');
 
 import type {
-  IGraphUnit,
-  IExtractFields,
-  IOutputUnit,
-  IGraphml,
-  IXMLField,
+  GraphUnit,
+  ExtractFields,
+  OutputUnit,
+  Graphml,
+  XMLField,
   IXMLValue,
-  TGraphmlKeys,
-  IExtractElements,
-  IExtractedGraphUnit,
-  IExportOptions,
+  GraphmlKeys,
+  ExtractElements,
+  ExtractedGraphUnit,
+  ExportOptions,
 } from './types';
 
 /**
@@ -23,7 +23,7 @@ import type {
  */
 export async function parseGraphmlFormat(graphmlFile: string) {
   debug('Parsing graphml XML string to JS object');
-  const graph: IGraphml = await parseStringPromise(graphmlFile);
+  const graph: Graphml = await parseStringPromise(graphmlFile);
   return graph;
 }
 
@@ -33,7 +33,7 @@ export async function parseGraphmlFormat(graphmlFile: string) {
  * @param graph - yEd editor's graphml file as JS object
  * @returns JS object converted to graphml XML string
  */
-export function convertToGraphmlFormat(graph: IGraphml) {
+export function convertToGraphmlFormat(graph: Graphml) {
   debug('Converting JS object to graphml XML string');
   const builder = new Builder({
     renderOpts: { pretty: false },
@@ -49,7 +49,7 @@ export function convertToGraphmlFormat(graph: IGraphml) {
  * @param fields - Fields to export
  * @returns All node and edge fields from the graph
  */
-export function getUnitsFromGraph(graph: IGraphml, options?: IExportOptions) {
+export function getUnitsFromGraph(graph: Graphml, options?: ExportOptions) {
   debug('Getting node and edge fields');
 
   const graphUnits = getAllGraphUnits(graph);
@@ -60,7 +60,7 @@ export function getUnitsFromGraph(graph: IGraphml, options?: IExportOptions) {
   const { postProcess } = options;
   if (typeof postProcess === 'function') {
     debug('Postprocessing graph units');
-    units = units.reduce<IOutputUnit[]>((acc, unit) => {
+    units = units.reduce<OutputUnit[]>((acc, unit) => {
       const postProcessedUnit = postProcess(unit);
       if (postProcessedUnit != null) acc.push(postProcessedUnit);
       return acc;
@@ -78,9 +78,9 @@ export function getUnitsFromGraph(graph: IGraphml, options?: IExportOptions) {
  * @returns Updated graph
  */
 export function updateGraph(
-  graph: IGraphml,
-  newUnits: IOutputUnit[],
-  extractedFields: IExtractFields
+  graph: Graphml,
+  newUnits: OutputUnit[],
+  extractedFields: ExtractFields
 ) {
   const oldUnits = getAllGraphUnits(graph);
   const elements = extractElements(oldUnits);
@@ -141,7 +141,7 @@ export function updateGraph(
  * @param graph - graphml file as JS object
  * @returns Node and edge raw data
  */
-function getAllGraphUnits(graph: IGraphml) {
+function getAllGraphUnits(graph: Graphml) {
   const nodes = getGraphUnit(graph, 'node');
   const edges = getGraphUnit(graph, 'edge');
 
@@ -157,7 +157,7 @@ function getAllGraphUnits(graph: IGraphml) {
  * @returns All items with the specified type. Only the data element
  *          corresponding to the specified key is included
  */
-function getGraphUnit(graph: IGraphml, type: 'node' | 'edge'): IGraphUnit[] {
+function getGraphUnit(graph: Graphml, type: 'node' | 'edge'): GraphUnit[] {
   const data = graph.graphml.graph[0]?.[type];
 
   if (!data) throw new Error(`Data missing for ${type}s`);
@@ -191,7 +191,7 @@ function getGraphUnit(graph: IGraphml, type: 'node' | 'edge'): IGraphUnit[] {
     if (itemData === undefined || typeof itemData === 'string')
       throw new Error('Proper item data not found');
 
-    const result: IGraphUnit = {
+    const result: GraphUnit = {
       id,
       type,
       data: itemData,
@@ -215,7 +215,7 @@ function getGraphUnit(graph: IGraphml, type: 'node' | 'edge'): IGraphUnit[] {
  * @param keyValue - Value of the `keyAttribute` for correct key
  * @returns The value of the `id` field of the defined key
  */
-function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
+function findKeyId(keys: GraphmlKeys, keyAttribute: string, keyValue: string) {
   const key = keys.find(key => key?.$?.[keyAttribute] === keyValue);
   const id = key?.$?.id;
 
@@ -234,9 +234,9 @@ function findKeyId(keys: TGraphmlKeys, keyAttribute: string, keyValue: string) {
  * @returns Array of objects with id and specified elements as keys
  */
 export function extractElements(
-  data: IGraphUnit[],
-  elements?: IExtractElements
-): IExtractedGraphUnit[] {
+  data: GraphUnit[],
+  elements?: ExtractElements
+): ExtractedGraphUnit[] {
   if (elements) {
     const allElements = [
       ...elements.node,
@@ -264,7 +264,7 @@ export function extractElements(
     const childElement = getXMLFieldFromSingletonArray(item.data, childType);
 
     // Object to store extracted elements
-    const result: IExtractedGraphUnit = {
+    const result: ExtractedGraphUnit = {
       id: item.id,
       type: item.type,
       data: item.data,
@@ -298,9 +298,9 @@ export function extractElements(
  * @returns Array of objects containing the extracted fields
  */
 function extractFields(
-  data: IGraphUnit[],
-  fieldsToExtract: IExtractFields
-): IOutputUnit[] {
+  data: GraphUnit[],
+  fieldsToExtract: ExtractFields
+): OutputUnit[] {
   const elements = extractElements(data);
 
   return elements.map(element => {
@@ -333,7 +333,7 @@ function extractFields(
       label = null;
     }
 
-    const output: IOutputUnit = {
+    const output: OutputUnit = {
       id: element.id,
       type: element.type,
       unitType: element.unitType,
@@ -405,7 +405,7 @@ function setNestedProperty(
   obj[lastKey] = value;
 }
 
-function getXMLFieldFromSingletonArray(data: IXMLField, field: string) {
+function getXMLFieldFromSingletonArray(data: XMLField, field: string) {
   const elements = data[field];
 
   // Verify that the field contains an array

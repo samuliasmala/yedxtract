@@ -2,7 +2,7 @@ import { read, write, utils } from 'xlsx';
 import Debug from 'debug';
 const debug = Debug('yedxtract:excel');
 
-import { IImportOptions, IMetadata, IOutputUnit, IXlsxOptions } from './types';
+import { ImportOptions, Metadata, OutputUnit, XlsxOptions } from './types';
 import { LIB_VERSION } from './version';
 
 type ExcelCellValue = string | number | boolean | Date | null | undefined;
@@ -10,9 +10,9 @@ type ExcelRow = Record<string, ExcelCellValue>;
 type ExcelColumn = [string, number];
 
 export function createXlsx(
-  units: IOutputUnit[],
-  metadata: IMetadata,
-  options: IXlsxOptions = {}
+  units: OutputUnit[],
+  metadata: Metadata,
+  options: XlsxOptions = {}
 ) {
   debug(`Creating Excel file (${units.length} rows)`);
 
@@ -95,7 +95,7 @@ export function createXlsx(
  * @param options - Options object to define imported fields
  * @returns List of values for nodes and edges
  */
-export function importXlsx(xlsx: Buffer, options?: IImportOptions) {
+export function importXlsx(xlsx: Buffer, options?: ImportOptions) {
   if (options === undefined) options = {};
 
   debug('Importing Excel file');
@@ -139,7 +139,7 @@ export function importXlsx(xlsx: Buffer, options?: IImportOptions) {
     const { id, type, source, target, validated } = validateRow(filteredCols);
     const { unitType, label, ...fields } = validated;
 
-    const unit: IOutputUnit = {
+    const unit: OutputUnit = {
       id,
       type,
       source,
@@ -157,7 +157,7 @@ export function importXlsx(xlsx: Buffer, options?: IImportOptions) {
   const { postProcess } = options;
   if (typeof postProcess === 'function') {
     debug('Postprocessing excel units');
-    units = units.reduce<IOutputUnit[]>((acc, unit) => {
+    units = units.reduce<OutputUnit[]>((acc, unit) => {
       const postProcessedUnit = postProcess(unit);
       if (postProcessedUnit != null) acc.push(postProcessedUnit);
       return acc;
@@ -167,7 +167,7 @@ export function importXlsx(xlsx: Buffer, options?: IImportOptions) {
   return { units, metadata };
 }
 
-function filterProperties(properties: string[], options: IXlsxOptions = {}) {
+function filterProperties(properties: string[], options: XlsxOptions = {}) {
   return options.include
     ? properties.filter(f => options.include?.includes(f))
     : options.exclude
@@ -215,12 +215,12 @@ function validateRow(row: ExcelRow) {
   };
 }
 
-function removeUndefined(obj: IOutputUnit) {
+function removeUndefined(obj: OutputUnit) {
   const keys = Object.keys(obj) as Array<keyof typeof obj>;
   keys.forEach(key => obj[key] === undefined && delete obj[key]);
 }
 
-function instanceOfMetadata(obj: unknown): obj is IMetadata {
+function instanceOfMetadata(obj: unknown): obj is Metadata {
   if (typeof obj !== 'object' || obj === null) return false;
   // obj is now type object
   return (

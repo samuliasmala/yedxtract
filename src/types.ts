@@ -1,42 +1,42 @@
-export interface IXMLField {
+export interface XMLField {
   [key: string]: IXMLValue;
 }
 
-export type IXMLValue = string | IXMLField | Array<string | IXMLField>;
+export type IXMLValue = string | XMLField | Array<string | XMLField>;
 
-export type TGraphmlKeys = Array<{ $: Record<string, string> }>;
+export type GraphmlKeys = Array<{ $: Record<string, string> }>;
 
-export interface IGraphml {
+export interface Graphml {
   graphml: {
     $: Record<string, string>;
-    data: Array<IXMLField>;
+    data: Array<XMLField>;
     graph: Array<{
       $: Record<string, string>;
-      data: Array<IXMLField>;
-      edge: Array<IXMLField>;
-      node: Array<IXMLField>;
+      data: Array<XMLField>;
+      edge: Array<XMLField>;
+      node: Array<XMLField>;
     }>;
-    key: TGraphmlKeys;
+    key: GraphmlKeys;
   };
 }
 
-export interface IGraphUnit {
+export interface GraphUnit {
   id: string;
   type: 'node' | 'edge';
   source?: string;
   target?: string;
-  data: IXMLField;
+  data: XMLField;
   // Reference to object attributes which contain source and target values, used
   // to update the graph
-  attributes: IXMLField;
+  attributes: XMLField;
 }
 
-export interface IExtractedGraphUnit extends IGraphUnit {
+export interface ExtractedGraphUnit extends GraphUnit {
   unitType: string;
-  elements: IXMLField;
+  elements: XMLField;
 }
 
-export interface IOutputUnit {
+export interface OutputUnit {
   id: string;
   type: 'node' | 'edge';
   source?: string;
@@ -44,45 +44,45 @@ export interface IOutputUnit {
   unitType?: string | null;
   label?: string | null;
   fields: Record<string, string | null>;
-  data?: IXMLField;
+  data?: XMLField;
 }
 
-export interface IExtractFieldsUnit {
+export interface ExtractFieldsUnit {
   [outputField: string]: string[];
 }
 
-export interface IExtractFields {
-  node?: IExtractFieldsUnit;
-  edge?: IExtractFieldsUnit;
-  common?: IExtractFieldsUnit;
+export interface ExtractFields {
+  node?: ExtractFieldsUnit;
+  edge?: ExtractFieldsUnit;
+  common?: ExtractFieldsUnit;
 }
 
-export interface IExtractElements {
+export interface ExtractElements {
   node: string[];
   edge: string[];
   common: string[];
 }
 
-export interface IXlsxOptions {
+export interface XlsxOptions {
   include?: string[];
   exclude?: string[];
 }
 
-export interface IMetadata {
+export interface Metadata {
   yedxtractVersion?: string;
   yedFilename: string;
   yedHash: string;
-  extractedFields: IExtractFields;
+  extractedFields: ExtractFields;
 }
 
-export type TPostProcess = (row: IOutputUnit) => IOutputUnit | null;
+export type PostProcess = (row: OutputUnit) => OutputUnit | null;
 
-export interface IExportOptions {
-  fieldsToExport?: IExtractFields;
-  postProcess?: TPostProcess;
+export interface ExportOptions {
+  fieldsToExport?: ExtractFields;
+  postProcess?: PostProcess;
 }
 
-export interface IImportOptions {
-  postProcess?: TPostProcess;
-  fieldsToImport?: IXlsxOptions;
+export interface ImportOptions {
+  postProcess?: PostProcess;
+  fieldsToImport?: XlsxOptions;
 }

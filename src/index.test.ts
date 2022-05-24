@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 
 import { exportExcel, importExcel } from '.';
 import { readFile } from './file';
-import type { IExportOptions } from './types';
+import type { ExportOptions } from './types';
 
 const ORIGINAL_GRAPH = __dirname + '/../data/simple.graphml';
 const OUTPUT_EXCEL = __dirname + '/../data/simple.xlsx';
@@ -11,7 +11,7 @@ const TRANSLATED_GRAPH = __dirname + '/../data/simple-translated.graphml';
 
 describe('E2E tests', () => {
   test('export from graphml to xlsx', async () => {
-    const options: IExportOptions = {
+    const options: ExportOptions = {
       fieldsToExport: {
         node: {
           configuration: ['$', 'configuration'],
