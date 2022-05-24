@@ -1,8 +1,8 @@
 export interface XMLField {
-  [key: string]: IXMLValue;
+  [key: string]: XMLValue;
 }
 
-export type IXMLValue = string | XMLField | Array<string | XMLField>;
+export type XMLValue = string | XMLField | Array<string | XMLField>;
 
 export type GraphmlKeys = Array<{ $: Record<string, string> }>;
 

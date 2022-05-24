@@ -8,7 +8,7 @@ import type {
   OutputUnit,
   Graphml,
   XMLField,
-  IXMLValue,
+  XMLValue,
   GraphmlKeys,
   ExtractElements,
   ExtractedGraphUnit,
@@ -351,28 +351,28 @@ function extractFields(
   });
 }
 
-function getNestedString(data: IXMLValue, keys: Array<string | number>) {
+function getNestedString(data: XMLValue, keys: Array<string | number>) {
   const value = getNestedProperty(data, keys);
   if (typeof value !== 'string') throw new Error('Property not string');
   return value;
 }
 
-function getNestedArray(data: IXMLValue, keys: Array<string | number>) {
+function getNestedArray(data: XMLValue, keys: Array<string | number>) {
   const value = getNestedProperty(data, keys);
   if (!Array.isArray(value)) throw new Error('Property not an array');
   return value;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getNestedXMLField(data: IXMLValue, keys: Array<string | number>) {
+function getNestedXMLField(data: XMLValue, keys: Array<string | number>) {
   const value = getNestedProperty(data, keys);
   if (typeof value === 'string' || Array.isArray(value))
     throw new Error('Property not IXMLField');
   return value;
 }
 
-function getNestedProperty(data: IXMLValue, keys: Array<string | number>) {
-  let value: IXMLValue = data;
+function getNestedProperty(data: XMLValue, keys: Array<string | number>) {
+  let value: XMLValue = data;
 
   for (const key of keys) {
     if (typeof value === 'string')
@@ -395,9 +395,9 @@ function getNestedProperty(data: IXMLValue, keys: Array<string | number>) {
 }
 
 function setNestedProperty(
-  data: IXMLValue,
+  data: XMLValue,
   keys: Array<string | number>,
-  value: IXMLValue
+  value: XMLValue
 ) {
   if (keys.length < 1) throw new Error('Keys cannot be empty');
   const lastKey = keys.slice(-1)[0];
