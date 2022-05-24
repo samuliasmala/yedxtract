@@ -4,7 +4,11 @@
     "warnOnUnsupportedTypeScriptVersion": false
   },
   "rules": {
-    "eqeqeq": ["error", "always", {"null": "ignore"}],
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "ignoreRestSiblings": true }
+    ],
     "prettier/prettier": "warn"
   }
 }
