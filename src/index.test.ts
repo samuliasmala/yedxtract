@@ -9,7 +9,7 @@ const OUTPUT_EXCEL = __dirname + '/../data/simple.xlsx';
 const TRANSLATED_EXCEL = __dirname + '/../data/simple-translated.xlsx';
 const TRANSLATED_GRAPH = __dirname + '/../data/simple-translated.graphml';
 
-describe('E2E tests', () => {
+describe('index.ts', () => {
   test('export from graphml to xlsx', async () => {
     const options: ExportOptions = {
       fieldsToExport: {
