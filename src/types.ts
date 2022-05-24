@@ -44,6 +44,7 @@ export interface IOutputUnit {
   unitType?: string | null;
   label?: string | null;
   fields: Record<string, string | null>;
+  data?: IXMLField;
 }
 
 export interface IExtractFieldsUnit {

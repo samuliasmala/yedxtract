@@ -17,7 +17,7 @@ export function createXlsx(
   debug(`Creating Excel file (${units.length} rows)`);
 
   const rows: ExcelRow[] = units.map(unit => {
-    const { fields, ...rest } = unit;
+    const { fields, data, ...rest } = unit;
     const allFields: Record<string, string | null> = {
       ...fields,
       ...rest,

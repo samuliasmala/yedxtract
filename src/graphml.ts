@@ -339,6 +339,7 @@ function extractFields(
       unitType: element.unitType,
       label,
       fields: result,
+      data: element.data,
     };
 
     // Add source and target if they exist
