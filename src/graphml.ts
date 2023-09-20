@@ -239,9 +239,9 @@ export function extractElements(
 ): ExtractedGraphUnit[] {
   if (elements) {
     const allElements = [
+      ...elements.common,
       ...elements.node,
       ...elements.edge,
-      ...elements.common,
     ];
     debug(`Extracting elements (${allElements.join(', ')})`);
   } else {
