@@ -40,6 +40,22 @@ export async function exportExcel(
   return xlsxFile;
 }
 
+/**
+ *
+ * @param inputGraphmlFile - Path to the input graphml file
+ * @param outputXlsxFile - Path to the output xlsx file
+ * @param [options] - Options object for the export
+ * @param [options.fieldsToExport.{node|edge|common}] - The fields which are extracted from the graph for
+ * nodes/edges/both (node/edge field is prioritized over common field)
+ * @param {string[]} [options.fieldsToExport.{node|edge|common}.<output>] - Path to the property in the graphml file
+ * which is used to create the output field. E.g., `color: ['y:Fill', '[0]', '$', 'color']` will extract the node color to
+ * the output field `color`.
+ * @param [options.columnsToExcel] - The columns which are exported to the xlsx file.
+ * @param {string[]} [options.columnsToExcel.{include|exclude}] - The columns which are exported to the xlsx file. If
+ * `include` property is set, only those columns are exported. If `include` is `undefined`, then all columns except
+ * those in `exclude` are exported.
+ * @param [options.postProcess] - Function to post-process selected columns: Post(row: OutputUnit) => OutputUnit | null;
+ */
 export async function exportExcelFile(
   inputGraphmlFile: string,
   outputXlsxFile: string,
@@ -77,6 +93,17 @@ export async function importExcel(
   return xml;
 }
 
+/**
+ *
+ * @param inputGraphmlFile - Path to the input graphml file
+ * @param inputXlsxFile - Path to the input xlsx file
+ * @param outputGraphmlFile - Path to the output graphml file
+ * @param {string[]} [options.fieldsToImport.{include|exclude}] - The excel columns which are imported to the graphql
+ * file. If `include` property is set, only those columns are imported. If `include` is `undefined`, then all columns
+ * except those in `exclude` are imported. Note: Only fixed fields (source, target, label) and fields present in
+ * `extractedFields` row in xlsx Metadata sheet are imported. `id` is used for matching.
+ * @param [options.postProcess] - Function to post-process selected columns: Post(row: OutputUnit) => OutputUnit | null;
+ */
 export async function importExcelFile(
   inputGraphmlFile: string,
   inputXlsxFile: string,
